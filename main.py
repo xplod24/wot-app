@@ -1,60 +1,72 @@
 import requests
 import PySimpleGUI as sg
 import json
+import os
+import shutil
+from asset_downloader import randaa
+from log import addLog
+from asset_downloader import apiCaller
+from app import app
 
-def apiCaller(stringToCall):
-    responseAPI = requests.get(stringToCall)
-    ms = responseAPI.elapsed.total_seconds()*100
-    print(str(ms) + " - Response time")
-    data = responseAPI.text
-    json_parse = json.loads(data)
-    return json_parse, ms
+def tank_assets(whatToDo):
+    
+    """This method allows to control assets of tanks (icons, etc.)
 
-
-sg.theme('BluePurple')
-
-layout = [[sg.Text('Check WOT server status')],
-            [sg.Frame(title="Audible",layout=[
-                [sg.Text("Pryc")]] ,size=(450, 300))
-            , sg.Push(), sg.Frame(layout=[
-                [sg.Text(text="EU1"), sg.Text(text="-",k='-players-eu1-')],
-                [sg.Text(text="EU2"), sg.Text(text="-",k='-players-eu2-')],
-                [sg.Text(text="EU3"), sg.Text(text="-",k='-players-eu3-')],
-                [sg.Text(text="EU4"), sg.Text(text="-",k='-players-eu4-')],
-                [sg.Text("Request handled in"), sg.Text("Run check first", k='-ping-api-')]], title="Servers", size=(300, 300))],
-            [sg.Button('Check'), sg.Button('Exit')]]
-
-window = sg.Window('Pattern 2B', layout, size=(800,600), resizable=False)
-
-while True:  # Event Loop
-    event, values = window.read()
-    print(event, values)
-    if event == sg.WIN_CLOSED or event == 'Exit':
-        break
-    if event == 'Check':
-        xa = ""
-        a = apiCaller("https://api.worldoftanks.eu/wgn/servers/info/?application_id=9ec1b1d893318612477ebc6807902c3c&game=wot")
-        window['-ping-api-'].update(value=str(a[1])+" ms")
-        for i in a[0]['data']['wot']:
-            xa = "Serwer: " + i['server'] + " Gracze: " + str(i['players_online'])
-            print(xa)
-            if i['server'] == "EU1":
-                print(str(i['players_online']))
-                window['-players-eu1-'].update(value=str(i['players_online']))
-            elif i['server'] == "EU2":
-                print(str(i['players_online']))
-                window['-players-eu2-'].update(value=str(i['players_online']))
-            elif i['server'] == "203":
-                print(str(i['players_online']))
-                window['-players-eu3-'].update(value=str(i['players_online']))
-            elif i['server'] == "204":
-                print(str(i['players_online']))
-                window['-players-eu4-'].update(value=str(i['players_online']))
+    Args:
+        whatToDo (string): Only exact strings are allowed:
+        Delete - Deletes whole assets folder
+        Refresh - FIrst deletes whole folder, then redownloads all assets
+    """
+    
+    if whatToDo == "Delete":
+        try:
+            shutil.rmtree("./assets")
+            addLog("info", "Folder for tank assets created")
+        except OSError as e:
+            print(f"Error removing folder: {e}")
+            addLog("error", f"{e}")
             
-        
 
-window.close()
+callForImages = apiCaller("https://api.worldoftanks.eu/wot/encyclopedia/vehicles/?application_id=9ec1b1d893318612477ebc6807902c3c&fields=images.big_icon&page_no=1")
+total_images = callForImages[0]['meta']['total']
 
-# for i in servers:
-#     print("Serwer: " + i['server'])
-#     print("Gracze: " + str(i['players_online']))
+layoutfirst = [
+    [sg.Push(), sg.Text("Hello!"),sg.Push()],
+    [sg.Push(), sg.Text("Thanks for downloading my app!"), sg.Push()],
+    [sg.Push(), sg.Text("This app needs assets in order to function properly"), sg.Push()],
+    [sg.Push(), sg.Text("Buttons below will tell you if you need to update folders with assets"), sg.Push()],
+    [sg.Push(), sg.Text("Tanks assets"), sg.Push(), sg.Text("Refresh to update status", k='-tank-assets-status-') ,sg.Push(), sg.Button("Download", k='-assets-tanks-down-'), sg.Button("Delete", k='-assets-tanks-del-'), sg.Button("Check", k='-assets-tanks-ref-'), sg.Push()],
+    [sg.VPush()],
+    [sg.Push(),sg.Button("Proceed"),sg.Push()]
+]
+
+def main():
+    window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layoutfirst, size=(800,600), resizable=False, icon="game.ico")
+    addLog("info", "Main window init...")
+    while True:
+        event, values = window.read(timeout=500)
+        print(event, values)
+        if window.is_closed() != True:
+            if os.path.isdir("./assets") != True:
+                window['-tank-assets-status-'].update(value="Folder does not exist", font="bold", text_color="cyan2")
+            elif len(os.listdir("./assets")) == 0:
+                window['-tank-assets-status-'].update(value="Assets not downloaded", font="bold", text_color="cyan2")
+            elif len(os.listdir("./assets")) != total_images:
+                window['-tank-assets-status-'].update(value="Incorrect amount of assets", font="bold", text_color="cyan2")
+            elif len(os.listdir("./assets")) == total_images:
+                window['-tank-assets-status-'].update(value="Assets downloaded!", font="bold", text_color="lightgreen")
+        if event == sg.WIN_CLOSED or event == 'Exit':
+            addLog("info","Main window exited. App closed.")
+            exit(0)
+        if event == '-assets-tanks-down-':
+            addLog("info", "Button to download assets of tanks clicked")
+            randaa()
+        if event == '-assets-tanks-del-':
+            addLog("info", "Button to remove folder with tanks assets clicked")
+            tank_assets("Delete")
+            window.refresh()
+
+            
+if __name__ == "__main__":
+    addLog("info", "App init...")
+    main()
