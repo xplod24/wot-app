@@ -9,9 +9,14 @@ from asset_downloader import apiCaller
 from app import app
 
             
-callForImages = apiCaller("https://api.worldoftanks.eu/wot/encyclopedia/vehicles/?application_id=9ec1b1d893318612477ebc6807902c3c&fields=images.big_icon")
-total_images = callForImages[0]['meta']['total']
-tanks_assets_count = len(os.listdir("./assets/tanks-big"))
+callForTanksImages = apiCaller("https://api.worldoftanks.eu/wot/encyclopedia/vehicles/?application_id=9ec1b1d893318612477ebc6807902c3c&fields=images.big_icon")
+total_images = callForTanksImages[0]['meta']['total']
+if os.path.isdir("./assets/tanks-big"):
+    tanks_assets_count = len(os.listdir("./assets/tanks-big"))
+else:
+    os.makedirs("./assets/tanks-big")
+    tanks_assets_count = len(os.listdir("./assets/tanks-big"))
+    
 layoutfirst = [
     [sg.Push(), sg.Text("Hello!"),sg.Push()],
     [sg.Push(), sg.Text("Thanks for downloading my app!"), sg.Push()],
