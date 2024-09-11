@@ -9,28 +9,51 @@ import threading
 import time
 import hashlib
 from layouts import layout_download
+from config_reader import *
 
-def apiCaller(stringToCall):
-    """This method allows to call an api for a response.
-    Returns tuple of json and response time in ms.
+def apiWotServerCaller(lang = None, game = None, fields = None):
+    """Method to call WG API to get server statuses
 
     Args:
-        stringToCall (string): Specify url to call
+        lang (string, optional): Language of response. Defaults to None.
+        game (string, optional): Game servers. Defaults to None. If None then shows all servers. Else put \"wot\".
+        fields (List[string], optional): List of field for api to return. Defaults to None.
 
     Returns:
-        (json_parse, ms) : json_parse - Response from api parsed to json, ms - Response time measured in miliseconds
+        tuple(apiToCall, json_parse, callTIme): Set of apiToCall -  url to call, json_parse - response from api, callTime - time of call in ms
+
     """
     try:
-        responseAPI = requests.get(stringToCall)
-        responseAPI.raise_for_status()
-    except requests.RequestException as e:
-        print(f"Request Failed: {e}") 
-    
-    ms = responseAPI.elapsed.total_seconds()*100
-    print(str(ms) + " - Response time")
-    data = responseAPI.text
-    json_parse = json.loads(data)
-    return json_parse, ms
+        apiToCall = main_api_url + wgApiServers + app_id
+        if lang is not None:
+            apiToCall = apiToCall + "&language="  + lang
+        if game is not None:
+            apiToCall = apiToCall + "&game=" + game
+        if fields is not None and isinstance(fields, list):
+            apiToCall = apiToCall + "&fields="
+            if  len(fields) > 1:
+                for f in fields:
+                    apiToCall = apiToCall  + f + "%2C"
+            else:
+                apiToCall = apiToCall  + fields[0]
+        elif fields is None:
+            pass
+        else:
+            print(f"Fields must be a list of strings not {type(fields)}")
+        print(apiToCall)
+        responseApi = requests.get(apiToCall)
+        responseApi.raise_for_status()
+        callTime = responseApi.elapsed.total_seconds()*100
+        print(str(callTime) + " - Response time")
+        data = responseApi.text
+        json_parse = json.loads(data)
+        return apiToCall, json_parse, callTime
+
+
+    except Exception as e:
+        print(f"Error: {e}")
+        sg.Popup(f"Fatal error: {e}")
+        exit(1)
         
 def worker(event):
 
@@ -39,13 +62,13 @@ def worker(event):
     else:
         i = 0
 
-    assets_tanks_pager = apiCaller("https://api.worldoftanks.eu/wot/encyclopedia/vehicles/?application_id=9ec1b1d893318612477ebc6807902c3c&fields=images.big_icon")
+    assets_tanks_pager = "" ## TO DO API call to get tank assets pages
     total_pages = assets_tanks_pager[0]['meta']['page_total']
     total_images = assets_tanks_pager[0]['meta']['total']
     print(f"Total pages: {total_pages} Total images: {total_images} Current image count: {i}")
     
     if i < total_images:
-        assets_page = apiCaller("https://api.worldoftanks.eu/wot/encyclopedia/vehicles/?application_id=9ec1b1d893318612477ebc6807902c3c&fields=images.big_icon")
+        assets_page = "" ##  TO DO API call to get tank assets page
 
         for tank_id, inner_dict in assets_page[0]['data'].items():
             if event.is_set():
@@ -78,20 +101,7 @@ def worker(event):
                     addLog("info",f"{file_itself} File is missing! Downloading...")
                     
                     try:
-                        # response = requests.get(file_to_download, stream=True)
-
-                        # if response.status_code != 200:
-                        #     print (f"Failed to download file: {response.status_code}")
-                        
-                        # filename = file_itself
-                        
                         total_size = int(response.headers.get('content-lenght', 0))
-
-                        # file_path = os.path.join(f"./assets/tanks-big/{filename}")
-                        # if os.path.exists(file_path):
-                        #     print(f"File already exists! File: {filename}")
-                        #     break
-                        
                         filepath = os.path.join("./assets/tanks-big", file_itself)
                         if os.path.exists(filepath):
                             print(f"File {file_itself} already exists, checking checksum...")
@@ -131,12 +141,12 @@ def worker(event):
 def randaa():
     download_window = sg.Window("File Downloader", layout_download, modal=True)
     addLog("info", "Download window init...")
-    assets_tanks_pager = apiCaller("https://api.worldoftanks.eu/wot/encyclopedia/vehicles/?application_id=9ec1b1d893318612477ebc6807902c3c&fields=images.big_icon")
+    assets_tanks_pager = "" ## TO DO : implement pager
     total_images = assets_tanks_pager[0]['meta']['total']
 
-    event2 = threading.Event()
-    downloader = threading.Thread(target=worker, args=(event2,))
-    downloader.start()
+    # event2 = threading.Event()
+    # downloader = threading.Thread(target=worker, args=(event2,))
+    # downloader.start()
     
     while True:
         event, values = download_window.read(timeout=100)
@@ -147,9 +157,11 @@ def randaa():
             download_window["-PROGRESS_BAR-"].update(i, total_images)
             download_window["-STATUS_TEXT-"].update(f"Files downloaded: {i}/{total_images}")
         if event == sg.WINDOW_CLOSED:
-            event2.set()
-            downloader.join()
+            # event2.set()
+            # downloader.join()
             create_filetree("./assets/tanks-big", "assets-tanks-tree.txt")
             break
 
     download_window.close()
+
+apiWotServerCaller("pl", "wot")
