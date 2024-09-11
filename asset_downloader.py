@@ -47,14 +47,15 @@ def apiWotServerCaller(lang = None, game = None, fields = None):
         print(str(callTime) + " - Response time")
         data = responseApi.text
         json_parse = json.loads(data)
-        return apiToCall, json_parse, callTime
-
-
     except Exception as e:
         print(f"Error: {e}")
         sg.Popup(f"Fatal error: {e}")
         exit(1)
-        
+    print(f"Api called this url: {apiToCall}")
+    print(f"And received:\n {json_parse}")
+    print(f"Response time was:  {callTime} ms")
+    return apiToCall, json_parse, callTime
+
 def worker(event):
 
     if os.path.isdir("./assets"):

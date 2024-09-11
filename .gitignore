@@ -2,3 +2,6 @@
 __pycache__
 assets/
 *.log
+/.vscode
+/__pycache__
+/common_app.log

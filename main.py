@@ -9,8 +9,9 @@ from app import app
 from layouts import layoutfirst
 from config_reader import *
 
-callForTanksImages = "" ## TO DO api call to get tanks images
-total_images = callForTanksImages[0]['meta']['total']
+callForTanksImages = 0 ## TO DO api call to get tanks images
+total_images = 0  ##  TO DO  api call to get total images
+
 if os.path.isdir("./assets/tanks-big"):
     tanks_assets_count = len(os.listdir("./assets/tanks-big"))
 else:
