@@ -1,5 +1,4 @@
 import PySimpleGUI as sg
-from asset_downloader import apiCaller
 from layouts import layout
 
 def app():
@@ -14,7 +13,7 @@ def app():
             break
         if event == 'Check':
             xa = ""
-            a = apiCaller("https://api.worldoftanks.eu/wgn/servers/info/?application_id=9ec1b1d893318612477ebc6807902c3c&game=wot")
+            a = "" ## CALL WG SERVER API
             window['-ping-api-'].update(value=str(a[1])+" ms")
             for i in a[0]['data']['wot']:
                 xa = "Serwer: " + i['server'] + " Gracze: " + str(i['players_online'])
@@ -34,7 +33,7 @@ def app():
         if event == '-button-player-search-':
             xa = values[0]
             print(xa)
-            a = apiCaller("https://api.worldoftanks.eu/wot/account/list/?application_id=9ec1b1d893318612477ebc6807902c3c&type=exact&limit=1&search="+xa)
+            a = "" ## TO DO API CALL FOR player search
             window['-ping-api-'].update(value=str(a[1])+" ms")
             print(a[0])
             if a[0]['status'] == 'ok':

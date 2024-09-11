@@ -6,6 +6,7 @@ configuration = configparser.ConfigParser()
 
 try:
     configuration.read('config.ini')
+    print("Loading config file...")
     sections = configuration.sections()
     for section in sections:
         options = configuration.options(section)

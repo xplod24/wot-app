@@ -1,7 +1,33 @@
 # TODO list
 ## Latest update 11.09.2024
-| [ ] Add all methods to call WG api | Finished 5% |
-| [ ] Implement methods into correct button calls | Finished 0% |
-| [ ] Add creating of filetree, checking for incorrect files in folders and correcting them | Finished 0% |
-| [ ] Add api calling to get player info and stats | Finished 0% |
-| [ ] Add api calling to get plater clan's info | Finished 0% |
+
+<table>
+<tr>
+<td width="49%"">
+TO DO
+</td>
+<td width="49%">
+Progress
+</td>
+</tr>
+  <tr>
+    <td>Add all methods to call WG api</td>
+    <td>Finished 5%</td>
+  </tr>
+  <tr>
+    <td>Implement methods into correct button calls</td>
+    <td>Finished 0%</td>
+  </tr>
+  <tr>
+    <td>Add creating of filetree, checking for incorrect files in folders and correcting them</td>
+    <td>Finished 0%</td>
+  </tr>
+  <tr>
+    <td>Add api calling to get player info and stats</td>
+    <td>Finished 0%</td>
+  </tr>
+  <tr>
+    <td>Add api calling to get plater clan's info</td>
+    <td>Finished 0%</td>
+  </tr>
+</table>

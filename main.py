@@ -5,7 +5,6 @@ import os
 import shutil
 from asset_downloader import randaa
 from log import addLog
-from asset_downloader import apiCaller
 from app import app
 from layouts import layoutfirst
 from config_reader import *
