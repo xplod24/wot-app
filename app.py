@@ -1,26 +1,9 @@
 import PySimpleGUI as sg
 from asset_downloader import apiCaller
+from layouts import layout
 
 def app():
     sg.theme('DarkGrey')
-    layout = [[sg.Push(), sg.Text('Wot-app checker'),sg.Push()],
-                [sg.Frame(title="Player searching",layout=[
-                    [sg.Text("Serach players by their nickname")],
-                    [sg.Input("", size=(45,1)), sg.Button("Search", k='-button-player-search-')],
-                    [sg.Text("Write your nickname in field above, it is CASE SENSITIVE. You HAVE TO write your EXACT nickname. Once it is found, details will appear below.", size=(45,3))],
-                    [sg.HSep()],
-                    [sg.Text("Player name:"), sg.Push(), sg.Text("-", k='-player-name-after-search-')],
-                    [sg.Text("Player ID:"), sg.Push(), sg.Text("-", k='-player-id-after-search-')]] ,size=(450, 200))
-                , sg.Push(), sg.Frame(layout=[
-                    [sg.Text(text="EU1"), sg.Text(text="-",k='-players-eu1-')],
-                    [sg.Text(text="EU2"), sg.Text(text="-",k='-players-eu2-')],
-                    [sg.Text(text="EU3"), sg.Text(text="-",k='-players-eu3-')],
-                    [sg.Text(text="EU4"), sg.Text(text="-",k='-players-eu4-')],
-                    [sg.Button('Check')]], title="Servers", size=(300, 200))],
-                [sg.Button('Run full player check', k='-full-check-'), sg.Button('Just load player stats', k='-player-check-'), sg.Button('Just load player clan stats', k='-clan-check-')],
-                [sg.TabGroup([[sg.Tab('Player statistics',[[]], expand_x=True, expand_y=True), sg.Tab('Clan', [[]], expand_x=True, expand_y=True)]], expand_x=True, expand_y=True)],
-                [sg.VPush()],
-                [sg.Button('Exit'),sg.Push(),sg.Frame(title="Request time", layout=[[sg.Text("Run any request first", k='-ping-api-')]])]]
 
     window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layout, size=(800,600), resizable=False, icon="game.ico")
 

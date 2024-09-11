@@ -8,6 +8,7 @@ import PySimpleGUI as sg
 import threading
 import time
 import hashlib
+from layouts import layout_download
 
 def apiCaller(stringToCall):
     """This method allows to call an api for a response.
@@ -128,13 +129,6 @@ def worker(event):
                     break
 
 def randaa():
-    
-    layout_download = [
-        [sg.Text("Downloading files...")],
-        [sg.ProgressBar(10, size=(20, 20), key="-PROGRESS_BAR-")],
-        [sg.Text("", key="-STATUS_TEXT-")]
-    ]
-    
     download_window = sg.Window("File Downloader", layout_download, modal=True)
     addLog("info", "Download window init...")
     assets_tanks_pager = apiCaller("https://api.worldoftanks.eu/wot/encyclopedia/vehicles/?application_id=9ec1b1d893318612477ebc6807902c3c&fields=images.big_icon")
