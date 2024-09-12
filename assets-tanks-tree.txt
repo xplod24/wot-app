@@ -1,0 +1,5 @@
+france-F08_AMX_50_100.png 088ce892de6e22c04a4a3dfcd3433b39
+germany-G02_Hummel.png 48ccb3eea360d8f3a77cff7405f2788b
+germany-G136_Tiger_131.png f068e2bedda360723fccf513bab8d671
+ussr-R04_T-34.png 7ae93cdbe19797bf304b69b8e183f417
+ussr-R12_A-20.png 76947c13bed8756336c77c0fc24b5a40

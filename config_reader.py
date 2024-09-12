@@ -26,6 +26,8 @@ try:
     wgApiServers = configuration.get("RequestAPI-WG", "servers")
     wgPlayerInfo = configuration.get("RequestAPI-WG", "player")
     
+    wotApiAssetsTanks = configuration.get("RequestAPI-WOT", "tankopedia-tanks-list")
+    
     wotApiPlayerList = configuration.get("RequestAPI-WOT", "player-list")
     wotApiPlayerInfo = configuration.get("RequestAPI-WOT", "player-data")
     wotApiPlayerTanksData = configuration.get("RequestAPI-WOT", "player-tanks-data")

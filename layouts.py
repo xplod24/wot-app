@@ -20,13 +20,7 @@ layoutfirst = [
     [sg.Push(),sg.Button("Login", k='-login-button-', disabled=True), sg.Button("Proceed to app", k='-proceed-to-app-'),sg.Push()]
 ]
 
-## ASSETS DOWNLOAD WINDOW
 
-layout_download = [
-    [sg.Text("Downloading files...")],
-    [sg.ProgressBar(10, size=(20, 20), key="-PROGRESS_BAR-")],
-    [sg.Text("", key="-STATUS_TEXT-")]
-]
 
 ## MAIN APP LAYOUT WINDOW
 
