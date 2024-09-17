@@ -2,9 +2,8 @@ import PySimpleGUI as sg
 from layouts import layout
 
 def app():
-    sg.theme('DarkGrey')
 
-    window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layout, size=(800,600), resizable=False, icon="game.ico")
+    window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layout, size=(1200,800), resizable=False, icon="game.ico")
 
     while True:  # Event Loop
         event, values = window.read()

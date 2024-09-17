@@ -8,7 +8,6 @@ import PySimpleGUI as sg
 import threading
 import time
 import hashlib
-from layouts import layout_download
 from config_reader import *
 
 def apiWotServerCaller(lang = None, game = None, fields = None):
@@ -160,37 +159,3 @@ def worker(event):
     with open(filetree_file, 'w') as f:
         for file, checksum in filetree_data.items():
             f.write(f"{file} {checksum}\n")
-
-def randaa():
-    ## ASSETS DOWNLOAD WINDOW
-
-    layout_download = [
-        [sg.Text("Downloading files...")],
-        [sg.ProgressBar(10, size=(20, 20), key="-PROGRESS_BAR-")],
-        [sg.Text("", key="-STATUS_TEXT-")]
-    ]
-    download_window = sg.Window("File Downloader", layout_download, modal=True)
-    addLog("info", "Download window init...")
-    assets_tanks_pager = apiWotAssetsDownloader(wotApiAssetsTanks, "pl", ["images.big_icon"])
-    total_images = assets_tanks_pager[1]['meta']['total']
-
-    event2 = threading.Event()
-    downloader = threading.Thread(target=worker, args=(event2,))
-    downloader.start()
-    
-    while True:
-        event, values = download_window.read(timeout=100)
-        print(event, values)
-        i = len(os.listdir("./assets/tanks-big"))
-        print(f"Total files in assets folder: {i}")
-        if download_window.is_closed() != True:
-            download_window["-PROGRESS_BAR-"].update(i, total_images)
-            download_window["-STATUS_TEXT-"].update(f"Files downloaded: {i}/{total_images}")
-        if event == sg.WINDOW_CLOSED:
-            event2.set()
-            downloader.join()
-            create_filetree("./assets/tanks-big", "assets-tanks-tree.txt")
-            break
-
-    download_window.close()
-    return sg.Window("File Downloader", layout_download, modal=True)
