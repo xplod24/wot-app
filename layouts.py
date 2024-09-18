@@ -15,7 +15,7 @@ layoutfirst = [
                                                  [sg.Button("Download", k='-modules-assets-down-'), sg.Button("Delete", k='-modules-assets-del-'), sg.Button("Check", k='-modules-assets-ref-')], 
                                                  [sg.Button("Download", k='-player-assets-down-'), sg.Button("Delete", k='-player-assets-del-'), sg.Button("Check", k='-player-assets-ref-')]]),
                          sg.Column([[sg.ProgressBar(10, size=(10, 20), key="-tanks-assets-pb-")], [sg.ProgressBar(10, size=(10, 20), key="-modules-assets-pb-")], [sg.ProgressBar(10, size=(10, 20), key="-player-assets-pb-")]]),
-                         sg.Column([[sg.Text("Placeholder", key="-tanks-assets-text-")], [sg.Text("Placeholder", key="-modules-assets-text-")], [sg.Text("Placeholder", key="-player-assets-text-")]]),
+                         sg.Column([[sg.Text("Checking...", key="-tanks-assets-text-")], [sg.Text("Checking...", key="-modules-assets-text-")], [sg.Text("Checking...", key="-player-assets-text-")]]),
      sg.Push(),],
     [sg.VPush()],
     [sg.Text("Current news:", font="bold")],

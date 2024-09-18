@@ -19,14 +19,11 @@ try:
     app_id = f"?application_id="+str(app_id)
     print(app_id)
     
-    assets_folder = configuration.get("Assets", "main_assets_folder")
-    assets_tanks = configuration.get("Assets", "tanks_big-icons_folder")
-    assets_ach = configuration.get("Assets", "achievements_folder")
-    
     wgApiServers = configuration.get("RequestAPI-WG", "servers")
     wgPlayerInfo = configuration.get("RequestAPI-WG", "player")
     
     wotApiAssetsTanks = configuration.get("RequestAPI-WOT", "tankopedia-tanks-list")
+    wotApiAssetsModules = configuration.get("RequestAPI-WOT", "tankopedia-consum-modules")
     
     wotApiPlayerList = configuration.get("RequestAPI-WOT", "player-list")
     wotApiPlayerInfo = configuration.get("RequestAPI-WOT", "player-data")

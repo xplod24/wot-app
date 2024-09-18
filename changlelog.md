@@ -1,5 +1,14 @@
 # Changelog for 11.09.2024
 
+## update 0a0.0.1 build 6
+
+- Added functionality to buttons on first window
+- Removed assets binding from config.ini
+- Added new requirement for git in requirements.txt
+- Updated layout of first window
+- First window now updates 2 times per second to offload some memory from app while its running
+- Added new thread for downloading assets for modules and consumables
+
 ## update 0a0.0.1 build 5 (constipation part2)
 
 - Remade download info, made it's way first screen.
