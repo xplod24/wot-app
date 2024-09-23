@@ -12,11 +12,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Get latest tag
+        uses: actions/github-script@v6
+        id: get-latest-tag
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const tags = await github.repos.getTags({
+              repo: context.repo.repo,
+              owner: context.repo.owner
+            });
+            const latestTag = tags.data[0].name;
+            console.log(`Latest tag: ${latestTag}`);
+            return latestTag;
+
       - name: Get changelog
         id: get-changelog
         run: |
-          changlelog=$(cat changlelog.md)
-          echo "::set-output name=changlelog::$changlelog"
+          changelog=$(cat changelog.md)
+          echo "::set-output name=changelog::$changelog"
 
       - name: Create full release asset
         run: |
@@ -30,12 +44,12 @@ jobs:
         id: create-release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.TOKENIZZZER }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TITLE: "release-latest"
-          RELEASE_DESCRIPTION: ${{ steps.get-changlelog.outputs.changlelog }}
+          RELEASE_DESCRIPTION: ${{ steps.get-changelog.outputs.changelog }}
           RELEASE_ASSETS: "full-release.zip, update.zip"
-          tag_name: ${{ "test" }}
-          TAG_DESCRIPTION: ${{ "test" }}
+          TAG_NAME: ${{ steps.get-latest-tag.outputs.result }}
+          TAG_DESCRIPTION: ${{ steps.get-changelog.outputs.changelog }}
 
       - name: Upload release assets
         uses: actions/upload-artifact@v4
