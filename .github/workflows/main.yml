@@ -1,4 +1,4 @@
-name: Release
+name: Create Release
 
 on:
   push:
@@ -6,28 +6,43 @@ on:
       - main
 
 jobs:
-  release:
+  create-release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Create update.zip
+      - name: Get changelog
+        id: get-changelog
         run: |
-          git archive -o update.zip HEAD $(git diff --name-only HEAD~1..HEAD)
+          changelog=$(cat changelog.md)
+          echo "::set-output name=changelog::$changelog"
 
-      - name: Create full-release.zip
+      - name: Create full release asset
         run: |
           git archive -o full-release.zip main .
 
-      - name: Upload release assets
-        uses: actions/upload-artifact@v4
-        with:
-          name: update.zip
-          path: update.zip
+      - name: Create update asset
+        run: |
+          git diff --name-only main~1 main | git archive -o update.zip -0
+
+      - name: Create release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKENIZZZER }}
+          RELEASE_TITLE: "release-latest"
+          RELEASE_DESCRIPTION: ${{ steps.get-changelog.outputs.changelog }}
+          RELEASE_ASSETS: "full-release.zip, update.zip"
 
       - name: Upload release assets
         uses: actions/upload-artifact@v4
         with:
           name: full-release.zip
           path: full-release.zip
+
+      - name: Upload update asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: update.zip
+          path: update.zip
