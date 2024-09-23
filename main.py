@@ -81,7 +81,7 @@ def main():
                 window["-modules-assets-pb-"].update(l, total_images_modules)
                 window["-modules-assets-text-"].update(f"{l}/{total_images_modules}")
                 
-        ## WHEN WINDOW IS CLOSED TERMINATE ALL THREADS ##
+        ## WHEN WINDOW IS CLOSED TERMINATE ALL THREADS IF ANY ARE RUNNING##
         if event == sg.WIN_CLOSED or event == 'Exit':
             if downloader.is_alive():
                 event2.set()

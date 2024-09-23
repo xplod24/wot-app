@@ -1,5 +1,11 @@
 # Changelog for 11.09.2024
 
+## update 0a0.0.1 build 7
+
+- Fixed name of changelog (took me this long to notice this xD)
+- Removed todo.md (redundant,  as it's now in the changelog)
+- Fixed layout of main portion of app, and added function to autocomplete nicks i search bar
+
 ## update 0a0.0.1 build 6
 
 - Added functionality to buttons on first window

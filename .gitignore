@@ -5,3 +5,6 @@ assets/
 /.vscode
 /__pycache__
 /common_app.log
+/update
+/create-packages.ps1
+/release-upload.ps1
