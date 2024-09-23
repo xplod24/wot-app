@@ -1,0 +1,64 @@
+name: Create Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get latest tag
+        uses: actions/github-script@v6
+        id: get-latest-tag
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const tags = await github.repos.getTags({
+              repo: context.repo.repo,
+              owner: context.repo.owner
+            });
+            const latestTag = tags.data[0].name;
+            console.log(`Latest tag: ${latestTag}`);
+            return latestTag;
+
+      - name: Get changelog
+        id: get-changelog
+        run: |
+          changelog=$(cat changelog.md)
+          echo "::set-output name=changelog::$changelog"
+
+      - name: Create full release asset
+        run: |
+          git archive -o full-release.zip main .
+
+      - name: Create update asset
+        run: |
+          git archive -o update.zip HEAD $(git diff --name-only main~1 main)
+
+      - name: Create release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TITLE: "release-latest"
+          RELEASE_DESCRIPTION: ${{ steps.get-changelog.outputs.changelog }}
+          RELEASE_ASSETS: "full-release.zip, update.zip"
+          TAG_NAME: ${{ steps.get-latest-tag.outputs.result }}
+          TAG_DESCRIPTION: ${{ steps.get-changelog.outputs.changelog }}
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-release.zip
+          path: full-release.zip
+
+      - name: Upload update asset
+        uses: actions/upload-artifact@v4
+        with:
+          name: update.zip
+          path: update.zip
