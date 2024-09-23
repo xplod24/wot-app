@@ -34,8 +34,8 @@ jobs:
           RELEASE_TITLE: "release-latest"
           RELEASE_DESCRIPTION: ${{ steps.get-changlelog.outputs.changlelog }}
           RELEASE_ASSETS: "full-release.zip, update.zip"
-          tag_name: "test"
-          TAG_DESCRIPTION: "test"
+          tag_name: ${{ "test" }}
+          TAG_DESCRIPTION: ${{ "test" }}
 
       - name: Upload release assets
         uses: actions/upload-artifact@v4
