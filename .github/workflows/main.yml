@@ -20,7 +20,7 @@ jobs:
       - name: Create full-release.zip
         run: |
           git archive -o full-release.zip main
-          git archive -o full-release.zip --all main
+          git archive -o full-release.zip . main
 
       - name: Upload release assets
         uses: actions/upload-artifact@v4
