@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Create update.zip
+        run: |
+          git archive -o update.zip HEAD
+          git archive -o update.zip HEAD $(git diff --name-only HEAD~1..HEAD)
+
+      - name: Create full-release.zip
+        run: |
+          git archive -o full-release.zip main
+          git archive -o full-release.zip --all main
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@v2
+        with:
+          name: update.zip
+          path: update.zip
+
+      - name: Upload release assets
+        uses: actions/upload-artifact@v2
+        with:
+          name: full-release.zip
+          path: full-release.zip
