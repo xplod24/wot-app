@@ -24,7 +24,7 @@ jobs:
 
       - name: Create update asset
         run: |
-          git diff --name-only main~1 main | git archive -o update.zip -0
+          git archive -o update.zip HEAD $(git diff --name-only main~1 main)
 
       - name: Create release
         id: create-release
