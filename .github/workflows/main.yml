@@ -15,8 +15,8 @@ jobs:
       - name: Get changelog
         id: get-changelog
         run: |
-          changelog=$(cat changelog.md)
-          echo "::set-output name=changelog::$changelog"
+          changlelog=$(cat changlelog.md)
+          echo "::set-output name=changlelog::$changlelog"
 
       - name: Create full release asset
         run: |
@@ -32,7 +32,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.TOKENIZZZER }}
           RELEASE_TITLE: "release-latest"
-          RELEASE_DESCRIPTION: ${{ steps.get-changelog.outputs.changelog }}
+          RELEASE_DESCRIPTION: ${{ steps.get-changlelog.outputs.changlelog }}
           RELEASE_ASSETS: "full-release.zip, update.zip"
 
       - name: Upload release assets
