@@ -14,13 +14,11 @@ jobs:
 
       - name: Create update.zip
         run: |
-          git archive -o update.zip HEAD
           git archive -o update.zip HEAD $(git diff --name-only HEAD~1..HEAD)
 
       - name: Create full-release.zip
         run: |
-          git archive -o full-release.zip main
-          git archive -o full-release.zip . main
+          git archive -o full-release.zip main .
 
       - name: Upload release assets
         uses: actions/upload-artifact@v4
