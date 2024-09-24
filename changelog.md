@@ -1,5 +1,11 @@
 # Changelog for 11.09.2024
 
+## update 0a0.0.1 build 8
+
+- Added current-version file as read-only file to contain current app version
+- Added script to update app or download full-release file
+- Removed workflow (will be made probably later on)
+
 ## update 0a0.0.1 build 7
 
 - Fixed name of changelog (took me this long to notice this xD)

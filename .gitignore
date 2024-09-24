@@ -8,3 +8,4 @@ assets/
 /update
 /create-packages.ps1
 /release-upload.ps1
+/.github
