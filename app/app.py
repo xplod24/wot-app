@@ -57,11 +57,16 @@ def app():
             print(xa)
             a = apiWotAssetsDownloader(wgPlayerInfo, "pl", [f"&search={xa}&=type=exact&limit=10"])
             window['-ping-api-'].update(value=str(a[2])+" ms")
+
+        if event == '-listbox-':
+            if values['-listbox-'] is not None:
+                xa = values['-listbox-'][0]
+            print(xa)
+            a = apiWotAssetsDownloader(wgPlayerInfo, "pl", [f"&search={xa}&=type=exact&limit=10"])
+            window['-ping-api-'].update(value=str(a[2])+" ms")
             print(a[1])
-            if a[1]['status'] == 'ok':
+            if a[1]['status'] == 'ok' and len(a[1]['data']) > 0:
                 window['-player-name-after-search-'].update(value=a[1]['data'][0]['nickname'])
                 window['-player-id-after-search-'].update(value=a[1]['data'][0]['account_id'])
-
+                
     window.close()
-
-app()

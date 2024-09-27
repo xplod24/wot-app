@@ -28,8 +28,8 @@ layoutfirst = [
 layout = [[sg.Push(), sg.Text('Wot-app checker'),sg.Push()],
             [sg.Frame(title="Player searching",layout=[
                 [sg.Text("Serach players by their nickname")],
-                [sg.Input("",k='-input-', size=(45,1),enable_events=True), sg.Button("Search", k='-button-player-search-')],
-                [sg.Listbox(values=[], key='-listbox-', size=(40, 10), expand_x=True, enable_events=True,select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)],
+                [sg.Input("",k='-input-', size=(45,1)), sg.Button("Search", k='-button-player-search-')],
+                [sg.Listbox(values=[], key='-listbox-', size=(40, 10), expand_x=True, bind_return_key=True,select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)],
                 ] ,size=(450, 200))
             , sg.Push(),
             sg.Frame(title="Player info", layout=[
@@ -51,6 +51,7 @@ layout = [[sg.Push(), sg.Text('Wot-app checker'),sg.Push()],
                     ]], expand_x=True, expand_y=True), 
                  sg.Tab('Clan', [[
                      
-                     ]], expand_x=True, expand_y=True)]], expand_x=True, expand_y=True)],
+                     ]], expand_x=True, expand_y=True)]], 
+                        size=(1200,400))],
             [sg.VPush()],
             [sg.Button('Exit'),sg.Push(),sg.Frame(title="Request time", layout=[[sg.Text("Run any request first", k='-ping-api-')]])]]

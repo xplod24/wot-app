@@ -9,3 +9,8 @@ assets/
 /create-packages.ps1
 /release-upload.ps1
 /.github
+/dist
+/build
+/app/dist
+/app/build
+/app/main.spec
