@@ -1,8 +1,5 @@
 import requests
-import os
-from alive_progress import alive_bar
 from log import addLog
-from asset_checker import get_checksum_from_filetree, create_filetree
 import json
 import PySimpleGUI as sg
 import threading
@@ -10,180 +7,48 @@ import time
 import hashlib
 from config_reader import *
 
-def apiWotAssetsDownloader(whatApiToCall, lang, fields):
+# BASE API CALLER AND BUILDER
+def apiCaller(whatApiToCall, fields):
+    """API caller and builder to connect to WG API
+
+    Args:
+        whatApiToCall (variable): Use correct variable from config _reader
+        lang (string): DEPRECATED SOON: Language of response
+        fields (List[string]): List of strings of field elements to get response of. 
+
+    Returns:
+        (apiToCall, jsonParse, callTime): returns url called, then parsed json and call time (in ms)
+    """
     try:
+        # Builder portion - this is based on .ini file and configuration. This should be robust, as it require single config file
         apiToCall = main_api_url + whatApiToCall + app_id
-        if lang is not None:
-            apiToCall = apiToCall + "&language="  + lang
+        # Fields, can contain other calls, should be renamed into something more informative
         if fields is not None and isinstance(fields, list):
             apiToCall = apiToCall + "&fields="
             if  len(fields) > 1:
-                for f in fields:
-                    apiToCall = apiToCall  + f + "%2C"
+                for field in fields:
+                    apiToCall = apiToCall  + field + "%2C"
             else:
                 apiToCall = apiToCall  + fields[0]
         elif fields is None:
             pass
         else:
             print(f"Fields must be a list of strings not {type(fields)}")
+            sg.Popup("Error in api calling! Check logs, and report issue on github.")
+            raise Exception("Fields must be a list of strings not {}".format(type(fields)))
         print(apiToCall)
         responseApi = requests.get(apiToCall)
         responseApi.raise_for_status()
+        code = responseApi.status_code
         callTime = responseApi.elapsed.total_seconds()*100
         print(str(callTime) + " - Response time")
         data = responseApi.text
         json_parse = json.loads(data)
-    except Exception as e:
-        print(f"Error: {e}")
-        sg.Popup(f"Fatal error: {e}")
+    except Exception as error:
+        print(f"Error: {error}")
+        sg.Popup(f"Fatal error: {error}")
         exit(1)
     print(f"Function called this url: {apiToCall}")
     print(f"And received:\n {json_parse}")
     print(f"Response time was:  {callTime} ms")
-    return apiToCall, json_parse, callTime
-
-def downloader_tanks_icons(event):
-    if os.path.isdir("./assets/tanks-big"):
-        i = len(os.listdir("./assets/tanks-big"))
-    else:
-        i = 0
-
-    assets_tanks_pager = apiWotAssetsDownloader(wotApiAssetsTanks, "pl", ["images.big_icon"])
-    total_pages = assets_tanks_pager[1]['meta']['page_total']
-    total_images = assets_tanks_pager[1]['meta']['total']
-    print(f"Total pages: {total_pages} Total images: {total_images} Current image count: {i}")
-
-    filetree_file = "assets-tanks-tree.txt"
-    filetree_data = {}
-
-    if i < total_images:
-        while True:
-            if event.is_set():
-                addLog("debug", f"{threading.get_ident()} Thread will be terminated")
-                print("Thread is terminating...")
-                break
-
-            assets_page = apiWotAssetsDownloader(wotApiAssetsTanks, "pl", ["images.big_icon"])
-
-            for tank_id, inner_dict in assets_page[1]['data'].items():
-                if event.is_set():
-                    addLog("debug", f"{threading.get_ident()} Thread will be terminated")
-                    print("Thread is terminating...")
-                    break
-
-                for big_image in inner_dict:
-                    if event.is_set():
-                        addLog("debug", f"{threading.get_ident()} Thread will be terminated")
-                        print("Thread is terminating...")
-                        break
-
-                    file_to_download = inner_dict[big_image]['big_icon']
-                    file_itself = os.path.basename(file_to_download)
-                    check_for_file = os.path.isfile(os.path.join("./assets", file_itself))
-
-                    print(f"Tank_id: {tank_id}, Big_image: {file_to_download}")
-                    print(f"Filename: {file_itself} Is in folder?: {check_for_file}")
-
-                    if check_for_file:
-                        print(f"{file_itself} File is found, omitting...")
-                        addLog("info", f"{file_itself} File is found, omitting...")
-                        i = i + 1
-                        continue
-
-                    else:
-                        print(f"{file_itself} File is missing! Downloading...")
-                        addLog("info", f"{file_itself} File is missing! Downloading...")
-
-                        try:
-                            response = requests.get(file_to_download)
-                            filepath = os.path.join("./assets/tanks-big", file_itself)
-                            with open(filepath, 'wb') as f:
-                                f.write(response.content)
-
-                            with open(filepath, 'rb') as f:
-                                file_checksum = hashlib.md5(f.read()).hexdigest()
-                            filetree_data[file_itself] = file_checksum
-
-                            print(f"Downloaded {file_itself}")
-                        except Exception as e:
-                            print(f"Error occurred! {e}")
-                            continue
-
-                        time.sleep(0.2)
-
-    with open(filetree_file, 'w') as f:
-        for file, checksum in filetree_data.items():
-            f.write(f"{file} {checksum}\n")
-
-def downloader_consumables_and_modules(event):
-    if os.path.isdir("./assets/modules"):
-        i = len(os.listdir("./assets/modules"))
-    else:
-        i = 0
-
-    assets_tanks_pager = apiWotAssetsDownloader(wotApiAssetsModules, "pl", ["image"])
-    total_pages = assets_tanks_pager[1]['meta']['page_total']
-    total_images = assets_tanks_pager[1]['meta']['total']
-    print(f"Total pages: {total_pages} Total images: {total_images} Current image count: {i}")
-
-    filetree_file = "assets-modules-tree.txt"
-    filetree_data = {}
-
-    if i < total_images:
-        while True:
-            if event.is_set():
-                addLog("debug", f"{threading.get_ident()} Thread will be terminated")
-                print("Thread is terminating...")
-                break
-
-            assets_page = apiWotAssetsDownloader(wotApiAssetsModules, "pl", ["image"])
-
-            for tank_id, inner_dict in assets_page[1]['data'].items():
-                if event.is_set():
-                    addLog("debug", f"{threading.get_ident()} Thread will be terminated")
-                    print("Thread is terminating...")
-                    break
-
-                for big_image in inner_dict:
-                    if event.is_set():
-                        addLog("debug", f"{threading.get_ident()} Thread will be terminated")
-                        print("Thread is terminating...")
-                        break
-
-                    file_to_download = inner_dict[big_image]
-                    file_itself = os.path.basename(file_to_download)
-                    check_for_file = os.path.isfile(os.path.join("./assets/modules", file_itself))
-
-                    print(f"Item_id: {tank_id}, Image: {file_to_download}")
-                    print(f"Filename: {file_itself} Is in folder?: {check_for_file}")
-
-                    if check_for_file:
-                        print(f"{file_itself} File is found, omitting...")
-                        addLog("info", f"{file_itself} File is found, omitting...")
-                        i = i + 1
-                        continue
-
-                    else:
-                        print(f"{file_itself} File is missing! Downloading...")
-                        addLog("info", f"{file_itself} File is missing! Downloading...")
-
-                        try:
-                            response = requests.get(file_to_download)
-                            filepath = os.path.join("./assets/modules", file_itself)
-                            with open(filepath, 'wb') as f:
-                                f.write(response.content)
-
-                            with open(filepath, 'rb') as f:
-                                file_checksum = hashlib.md5(f.read()).hexdigest()
-                            filetree_data[file_itself] = file_checksum
-
-                            print(f"Downloaded {file_itself}")
-                        except Exception as e:
-                            print(f"Error occurred! {e}")
-                            continue
-
-                        time.sleep(0.2)
-
-    with open(filetree_file, 'w') as f:
-        for file, checksum in filetree_data.items():
-            f.write(f"{file} {checksum}\n")
+    return apiToCall, json_parse, round(callTime, 2), code

@@ -2,6 +2,8 @@ import configparser
 import PySimpleGUI as sg
 import os
 
+from log import addLog
+
 ## CONFING FALLBACK DEFAULTS ##
 default_config = """
 [Connection]
@@ -94,4 +96,5 @@ try:
 except Exception as e:
     print(f"Error occured: {e}")
     sg.popup(f"{e}")
+    addLog("error", f"Error in config_reader caught: {e}")
     exit(0)
