@@ -1,10 +1,8 @@
+from textwrap import indent
 import requests
 from log import addLog
 import json
 import PySimpleGUI as sg
-import threading
-import time
-import hashlib
 from config_reader import *
 
 # BASE API CALLER AND BUILDER
@@ -19,6 +17,7 @@ def apiCaller(whatApiToCall, fields):
     Returns:
         (apiToCall, jsonParse, callTime): returns url called, then parsed json and call time (in ms)
     """
+    addLog("info","apiCaller used")
     try:
         # Builder portion - this is based on .ini file and configuration. This should be robust, as it require single config file
         apiToCall = main_api_url + whatApiToCall + app_id
@@ -33,6 +32,7 @@ def apiCaller(whatApiToCall, fields):
         elif fields is None:
             pass
         else:
+            addLog("critical", "\'Fields\' is not correct type")
             print(f"Fields must be a list of strings not {type(fields)}")
             sg.Popup("Error in api calling! Check logs, and report issue on github.")
             raise Exception("Fields must be a list of strings not {}".format(type(fields)))
@@ -44,11 +44,13 @@ def apiCaller(whatApiToCall, fields):
         print(str(callTime) + " - Response time")
         data = responseApi.text
         json_parse = json.loads(data)
+        show_parse = json.dumps(json_parse, indent=1)
     except Exception as error:
+        addLog("critical", f"Fatal error: {error}")
         print(f"Error: {error}")
         sg.Popup(f"Fatal error: {error}")
         exit(1)
     print(f"Function called this url: {apiToCall}")
-    print(f"And received:\n {json_parse}")
+    print(f"And received:\n {show_parse}")
     print(f"Response time was:  {callTime} ms")
     return apiToCall, json_parse, round(callTime, 2), code

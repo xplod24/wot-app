@@ -6,6 +6,7 @@ from datetime import *
 import threading
 import queue
 from plyer import notification
+from wn8 import WN8
 
 #Send native notification to os
 def send_notification(title, message):
@@ -30,45 +31,70 @@ def autocomplete(input_text, event):
 # Search for player in background
 def player_loader(player, event):
     addLog("info", "Started loading player info")
-    a = apiCaller(wotApiPlayerList, [f"&search={player}&=type=exact&limit=1"])                               #Download user info
-    chosen_nickname = a[1]['data'][0]['nickname']                                                                  #Set variable chosen_nickname to user's actual nickaname
-    chosen_player_id = a[1]['data'][0]['account_id']                                                               #Set variable chosen_player_id to user's actual id
-    player_data = apiCaller(wotApiPlayerInfo, [f"&account_id={chosen_player_id}"])                           #Load player data by his player_id
-    print(player_data[1])                                                                                          #Show it
-    player_clan_id = player_data[1]['data'][str(chosen_player_id)]['clan_id']                                      #Set variable player_clan id to actual player's clan id
+    #Download user info
+    a = apiCaller(wotApiPlayerList, [f"&search={player}&=type=exact&limit=1"])
+    #Set variable chosen_nickname to user's actual nickaname
+    chosen_nickname = a[1]['data'][0]['nickname']
+    #Set variable chosen_player_id to user's actual id
+    chosen_player_id = a[1]['data'][0]['account_id']
+    #Load player data by his player_id
+    player_data = apiCaller(wotApiPlayerInfo, [f"&account_id={chosen_player_id}"])
+    #Show it
+    print(player_data[1])
+    #Set variable player_clan id to actual player's clan id
+    player_clan_id = player_data[1]['data'][str(chosen_player_id)]['clan_id']
     addLog("info", "Checking if player has clan...")
-    if player_clan_id is not None:                                                                                 # If player is in clan
+    # If player is in clan
+    if player_clan_id is not None:
         addLog("info", "Player is in clan!")
-        clan_data = apiCaller(wotApiClanData, [f"&clan_id={player_clan_id}"])                                #Load user's clan data
-        player_clan_name = clan_data[1]['data'][str(player_clan_id)]['name']                                       #Set variable of clan's name
-        player_clan_tag = clan_data[1]['data'][str(player_clan_id)]['tag']                                         #Set variable of clan's id
-    else:                                                                                                          #Otherwise, just leave it blank
+        #Load user's clan data
+        clan_data = apiCaller(wotApiClanData, ["name", "tag",f"&clan_id={player_clan_id}"])
+        #Set variable of clan's name
+        player_clan_name = clan_data[1]['data'][str(player_clan_id)]['name']
+        #Set variable of clan's id
+        player_clan_tag = clan_data[1]['data'][str(player_clan_id)]['tag']
+    #Otherwise, just leave it blank
+    else:
         addLog("info", "Player is not in clan!")
         player_clan_name = "Not in clan"
         player_clan_tag = "Not in clan"
-    q.put([chosen_nickname, chosen_player_id, player_clan_name, player_clan_id, player_clan_tag])                  #Add all needed variables to queue
-    event.set()                                                                                                    #Finish event
+    #Add all needed variables to queue
+    q.put([chosen_nickname, chosen_player_id, player_clan_name, player_clan_id, player_clan_tag])
+    #Finish event
+    event.set()
 
 # Server status checking (one time or periodical)
 def server_checker(event):
+    #Call api to get servers status
     a = apiCaller(wgApiServers, ["server", "players_online&game=wot"])
-    for i in a[1]['data']['wot']:
-        xa = "Server: " + i['server'] + " Players: " + str(i['players_online'])
-        print(xa)
-        if i['server'] == "EU1":
-            print(str(i['players_online']))
-            srv1 = i['players_online']
-        elif i['server'] == "EU2":
-            print(str(i['players_online']))
-            srv2 = i['players_online']
-        elif i['server'] == "203":
-            print(str(i['players_online']))
-            srv3 = i['players_online']
-        elif i['server'] == "204":
-            print(str(i['players_online']))
-            srv4 = i['players_online']
+    #Check if servers are available over the api and populate info correctly
+    if len(a[1]['data']['wot']) > 0:
+        for i in a[1]['data']['wot']:
+            xa = "Server: " + i['server'] + " Players: " + str(i['players_online'])
+            print(xa)
+            if i['server'] == "EU1":
+                print(str(i['players_online']))
+                srv1 = i['players_online']
+            elif i['server'] == "EU2":
+                print(str(i['players_online']))
+                srv2 = i['players_online']
+            elif i['server'] == "203":
+                print(str(i['players_online']))
+                srv3 = i['players_online']
+            elif i['server'] == "204":
+                print(str(i['players_online']))
+                srv4 = i['players_online']
+    #Otherwise return "Unknown"
+    else:
+        srv1 = "Unknown"
+        srv2 = "Unknown"
+        srv3 = "Unknown"
+        srv4 = "Unknown"
+    #Put response timing first
     q.put(a[2])
+    #Put info about servers after
     q.put([srv1, srv2, srv3, srv4])
+    #Finish event
     event.set()
 # Covert timestamp into HH:MM:SS, DD-MM-YYYY
 def timestamp_covert(timestamp):
@@ -94,22 +120,22 @@ layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
               [sg.Text("Choose player name from this list")],
               [sg.Listbox(values=[], key='-listbox-', size=(40, 10), expand_x=True, bind_return_key=True,
                           select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)],
-          ], size=(450, 200))
-              , sg.Push(),
+          ], expand_x=True, expand_y=True)
+              ,
            sg.Frame(title="Player info", layout=[
                [[sg.HSep()],
                 [sg.Text("Player Name:"), sg.Push(), sg.Text("-", k='-player-name-after-search-')],
                 [sg.Text("Player ID:"), sg.Push(), sg.Text("-", k='-player-id-after-search-')], ],
                [sg.Text("Player Clan:"), sg.Push(), sg.Text("-", k='-player-clan-')],
                [sg.Text("Player Clan ID:"), sg.Push(), sg.Text("-", k='-player-clan-id-')]
-           ], size=(350, 200))
-              , sg.Push(),
+           ], expand_x=True, expand_y=True)
+              ,
            sg.Frame(layout=[
                [sg.Text(text="EU1"), sg.Text(text="-", k='-players-eu1-')],
                [sg.Text(text="EU2"), sg.Text(text="-", k='-players-eu2-')],
                [sg.Text(text="EU3"), sg.Text(text="-", k='-players-eu3-')],
                [sg.Text(text="EU4"), sg.Text(text="-", k='-players-eu4-')],
-               [sg.Button('Check', k='-button-serv-chk-')]], title="Servers", size=(300, 200))],
+               [sg.Button('Check', k='-button-serv-chk-')]], title="Servers", expand_x=True, expand_y=True)],
           [sg.Text("Click \'ENTER\' to run")],
           [sg.TabGroup([
               [sg.Tab('Player statistics', [
@@ -156,8 +182,8 @@ layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
                    ]], expand_x=True, expand_y=True),
                sg.Tab('Clan', [[
 
-               ]], expand_x=True, expand_y=True)]],
-              size=(1200, 400))],
+               ]], expand_x=True, expand_y=True)]], 
+                expand_x=True, expand_y=True,)],
           [sg.VPush()],
           [sg.Button('Exit'), sg.Push(),
            sg.Frame(title="Request time", layout=[[sg.Text("Run any request first", k='-ping-api-')]])]]
@@ -169,24 +195,27 @@ layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
 
 def app():
 
+    addLog("info", "App init: app()")
+
     processed = False
     servers_processed = False
     players_processed = False
-    window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layout, size=(1200,800), resizable=False, icon="game.ico")
+    window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layout, size=(1600,900), resizable=False, icon="game.ico")
 
     while True:
         event, values = window.read(timeout=100)
-        print(event, values)
+        #print(event, values)
         
         if event == sg.WIN_CLOSED or event == 'Exit':
-            addLog("info", "App closed correctly.")
+            addLog("info", "Main window closed correctly.")
+            addLog("info", "App closed: app()")
             break
         
         # Check input values and define data_loader thread
         input_text = values['-input-']
         if len(values['-listbox-']) > 0:
             xa = values['-listbox-'][0]  # Check for chosen player from listbox
-            print(xa)
+            #print(xa)
         else:
             xa = None
 
@@ -199,7 +228,7 @@ def app():
             addLog("info", "Searching players...")
             if len(input_text) <= 3:
                 sg.popup("Nickname has to contain at least 4 or more characters.")
-                addLog("warning", "Nickname too short...")
+                addLog("warning", "POPUP WINDOW: Nickname too short...")
             else:
                 eventer.clear()     #Clear events
                 processed = False   #Disable processed flag
@@ -218,7 +247,7 @@ def app():
             print(suggestions)
             window['-listbox-'].update(values=nickname_list,)
             processed = True    #Mark it as processed
-            addLog("info","Processing of thread is finished, terminated. Search button reenabled")
+            addLog("info","Processing of thread is finished and terminated. Search button reenabled")
             window['-button-player-search-'].update(text="Search", disabled=False) #Reenable button
      
         # Server status check
