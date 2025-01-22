@@ -15,34 +15,36 @@ import matplotlib.pyplot as plt
 import PySimpleGUI as sg
 
 #Something important
-windll.shcore.SetProcessDpiAwareness(0)
+windll.shcore.SetProcessDpiAwareness(1)
 sg.theme('DarkGrey3')
 use_agg('TkAgg')
 
+#Pack canvas into render frame
 def pack_figure(graph, figure):
     canvas = FigureCanvasTkAgg(figure, graph.Widget)
     plot_widget = canvas.get_tk_widget()
     plot_widget.pack(side='top', fill='both', expand=1)
     return plot_widget
 
-def plot_figure(index, datax, datay, nick):
+#Plot the chart into canvas, using data for x and y axis
+def plot_figure(index, datax, datay, nick, period):
     fig = plt.figure(index)         # Active an existing figure
     ax = plt.gca()                  # Get the current axes
     x = datax
     y = datay
     ax.cla()
-    ax.set_title(f"WN8 by month for player {nick}", pad=20)
-    ax.set_xlabel("Month")
+    ax.set_title(f"WN8 by {period} for player {nick}", pad=20)
+    ax.set_xlabel(f"{period}")
     ax.tick_params(axis='x', which='major' ,labelrotation=60)
     ax.set_ylabel("WN8")
     ax.grid()
     plt.plot(x, y, 'bo-')
     for a,b in zip(x,y):
         label = "{:.0f}".format(b)
-        plt.annotate(label, (a,b), textcoords="offset points", xytext=(0,0), ha='left', rotation=90)
-    # plt.tight_layout()
-    fig.canvas.draw()
+        plt.annotate(label, (a,b), textcoords="offset points", xytext=(-3,10), ha='left', rotation=90)
+    plt.tight_layout()
     
+    fig.canvas.draw()
     
 #Send native notification to os
 def send_notification(title, message):
@@ -53,6 +55,24 @@ def send_notification(title, message):
         timeout=10,
     )
 
+def hitory_write_to_file(filename, target):
+    with open(filename, 'w') as file:
+        for element in target:
+            # Check if the element is already in the file (to avoid duplicates)
+            file.write(f"{element}\n")
+    print(f"Elements written to {filename}.")
+
+def history_read_from_file(filename):
+    try:
+        history_list = []
+        with open(filename, 'r') as file:
+            for line in file:
+                element = line.strip()
+                history_list.append(element)
+        return history_list
+    except FileNotFoundError:
+        print(f"The file {filename} does not exist.")
+            
 # Autocomplete function for nicknames searching
 def autocomplete(input_text, event):
     if len(input_text) < 3 or not re.match(r'^[\w_]', input_text):
@@ -133,6 +153,7 @@ def server_checker(event):
     q.put([srv1, srv2, srv3, srv4])
     #Finish event
     event.set()
+    
 # Covert timestamp into HH:MM:SS, DD-MM-YYYY
 def timestamp_covert(timestamp):
     date_to_return = datetime.fromtimestamp(timestamp)
@@ -144,6 +165,7 @@ eventer = threading.Event()
 eventer2 = threading.Event()
 player_event = threading.Event()
 q = queue.Queue()
+session_history = []
 
 #################################################################################################
 # MAIN APP LAYOUT
@@ -154,7 +176,8 @@ layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
           [sg.Frame(title="Player searching", layout=[
                         [sg.Text("Search for players by their nickname:"), sg.Input("", k='-input-', size=(45, 1)), sg.Button("Search", k='-button-player-search-')],
                         [sg.Push(), sg.Text("Double click player name from this list"), sg.Push(), sg.Text("Or choose player name from history"), sg.Push()],
-                        [sg.Listbox(values=[], key='-listbox-', size=(10, 10), expand_x=True, bind_return_key=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE), sg.Listbox(values=[], key='-history-listbox-', size=(10, 10), expand_x=True, bind_return_key=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)
+                        [sg.Listbox(values=[], key='-listbox-', size=(10, 10), expand_x=True, bind_return_key=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE), 
+                         sg.Listbox(values=session_history, key='-history-listbox-', size=(10, 10), expand_x=True, bind_return_key=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)
                         ],
           ], expand_x=True, expand_y=True)
               ,
@@ -201,7 +224,7 @@ layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
                 sg.Tab('Monthly WN8 - Player Charts', [
                     [sg.Column([
                         # [sg.Button("Daily", key='-btn-player-daily-'), sg.Button("Weekly", key='-btn-player-weekly-'), sg.Button("Monthly", key='-btn-player-monthly')],
-                        [sg.Graph((1250,650),(0,0),(1250,650), key='Graph1'), sg.Text("Sample chart")]
+                        [sg.Graph((1000,750),(0,0),(1000,750), key='Graph1'), sg.Text("Sample chart")]
                         
                     ], size=(1550, 500), scrollable=True, vertical_scroll_only=True, key='-column-canvas-1-')]
                 ], expand_x=True, expand_y=True),
@@ -227,32 +250,45 @@ def app():
     processed = False
     servers_processed = False
     players_processed = False
+    read = history_read_from_file("history.txt")
+    session_history = read
     window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layout, size=(1600,1000), resizable=False, icon="game.ico")
-
+    addLog("info", "Window created, launching...")
+    
     graph1 = window['Graph1']
-    fig1 = plt.figure(1, figsize=(13,6))
+    fig1 = plt.figure(1, figsize=(9,4), dpi=80)
     first = True
+    init_history = False
     
     while True:
         event, values = window.read(timeout=100)
-        #print(event, values)
-        
+        # print(event, values)
+        # addLog("info",f"{event}, {values}")
+            
         if event == sg.WIN_CLOSED or event == 'Exit':
             addLog("info", "Main window closed correctly.")
             addLog("info", "App closed: app()")
             break
         
+        if not init_history:
+            window['-history-listbox-'].update(values=session_history)
+            init_history = True
+        
         # Check input values and define data_loader thread
         input_text = values['-input-']
-        if len(values['-listbox-']) > 0:
+        if len(values['-listbox-']) > 0 and event == '-listbox-':
             xa = values['-listbox-'][0]  # Check for chosen player from listbox
-            #print(xa)
+            player_check = threading.Thread(target=player_loader, args=(xa,player_event,))
+
+        elif len(values['-history-listbox-']) > 0 and event == '-history-listbox-':
+            xa = values['-history-listbox-'][0]
+            player_check = threading.Thread(target=player_loader, args=(xa,player_event,))
         else:
             xa = None
-
+        
         data_loader = threading.Thread(target=autocomplete, args=(input_text,eventer,))
         server_check = threading.Thread(target=server_checker, args=(eventer2,))
-        player_check = threading.Thread(target=player_loader, args=(xa,player_event,))
+        
 
         # Search button clicked
         if event == '-button-player-search-':
@@ -311,14 +347,27 @@ def app():
             window['Graph1'].erase()
             plt.clf()
             
+        if event == '-history-listbox-':
+            addLog("info", "Started check for selected player from list...")
+            player_event.clear()
+            player_check.start()
+            players_processed = False
+            window['-player-wn8-'].update(value="Calculating...")
+            window['Graph1'].erase()
+            plt.clf()
 
         if not players_processed and player_event.is_set():
+            # Read data from queue
             data = q.get()
             window['-player-name-after-search-'].update(value=data[0]+"["+ data[4] +"]")
             window['-player-id-after-search-'].update(value=data[1])
             window['-player-clan-'].update(value=data[2])
             window['-player-clan-id-'].update(value=data[3])
             window['-player-wn8-'].update(value=str(data[5]))
+            if data[0] not in session_history and not None:
+                session_history.append(data[0])
+                hitory_write_to_file("history.txt", session_history)
+            window['-history-listbox-'].update(values=session_history)
             dates = []
             wn8s = []
 
@@ -337,7 +386,7 @@ def app():
                 pack_figure(graph1, fig1)
                 first=False
             
-            plot_figure(1, dates, wn8s, data[0])
+            plot_figure(1, dates, wn8s, data[0], "month")
             window['-column-canvas-1-'].contents_changed()
             
             # window['-column-canvas-1-'].contents_changed()
