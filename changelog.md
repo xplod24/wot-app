@@ -8,3 +8,4 @@
 - Added update checking at app runtime
 - Added caling tomato.gg api to get player sessions
 - Added history of nicknames searched
+- Added chart section in player info
