@@ -14,6 +14,9 @@ app_id = 9ec1b1d893318612477ebc6807902c3c
 servers = /wgn/servers/info/
 player = /wgn/account/list/
 
+[Tomato-gg]
+player-sessions = https://api.tomato.gg/dev/api-v2/player/sessions/eu/
+
 [RequestAPI-WOT]
 player-list = /wot/account/list/
 player-data = /wot/account/info/
@@ -86,12 +89,15 @@ try:
     wotApiPlayerList = configuration.get("RequestAPI-WOT", "player-list")
     wotApiPlayerInfo = configuration.get("RequestAPI-WOT", "player-data")
     wotApiPlayerTanksData = configuration.get("RequestAPI-WOT", "player-tanks-data")
+    wotApiPlayerTanksStats = configuration.get("RequestAPI-WOT", "player-tanks-stats")
     wotApiPlayerAchData = configuration.get("RequestAPI-WOT", "player-ach-data")
     wotApiPlayerClanHistory = configuration.get("RequestAPI-WOT", "player-clan-history")
     
     wotApiClanList = configuration.get("RequestAPI-WOT", "clans-list")
     wotApiClanData = configuration.get("RequestAPI-WOT", "clans-data")
     wotApiClanMembers = configuration.get("RequestAPI-WOT", "clans-members")
+    
+    tomatoSessions = configuration.get("Tomato-gg", "player-sessions")
 
 except Exception as e:
     print(f"Error occured: {e}")

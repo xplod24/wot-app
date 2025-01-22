@@ -1,5 +1,7 @@
 import PySimpleGUI as sg
+import dearpygui.dearpygui as dpg
 from asset_downloader import apiCaller
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from config_reader import *
 import re
 from datetime import *
@@ -7,7 +9,41 @@ import threading
 import queue
 from plyer import notification
 from wn8 import WN8
+from matplotlib import use as use_agg
+from ctypes import windll
+import matplotlib.pyplot as plt
+import PySimpleGUI as sg
 
+#Something important
+windll.shcore.SetProcessDpiAwareness(0)
+sg.theme('DarkGrey3')
+use_agg('TkAgg')
+
+def pack_figure(graph, figure):
+    canvas = FigureCanvasTkAgg(figure, graph.Widget)
+    plot_widget = canvas.get_tk_widget()
+    plot_widget.pack(side='top', fill='both', expand=1)
+    return plot_widget
+
+def plot_figure(index, datax, datay, nick):
+    fig = plt.figure(index)         # Active an existing figure
+    ax = plt.gca()                  # Get the current axes
+    x = datax
+    y = datay
+    ax.cla()
+    ax.set_title(f"WN8 by month for player {nick}", pad=20)
+    ax.set_xlabel("Month")
+    ax.tick_params(axis='x', which='major' ,labelrotation=60)
+    ax.set_ylabel("WN8")
+    ax.grid()
+    plt.plot(x, y, 'bo-')
+    for a,b in zip(x,y):
+        label = "{:.0f}".format(b)
+        plt.annotate(label, (a,b), textcoords="offset points", xytext=(0,0), ha='left', rotation=90)
+    # plt.tight_layout()
+    fig.canvas.draw()
+    
+    
 #Send native notification to os
 def send_notification(title, message):
     notification.notify(
@@ -21,7 +57,7 @@ def send_notification(title, message):
 def autocomplete(input_text, event):
     if len(input_text) < 3 or not re.match(r'^[\w_]', input_text):
         return []
-    response = apiCaller(wgPlayerInfo, [f"&search={input_text}&=type=exact&limit=10"])
+    response = apiCaller(wotApiPlayerList, extra=f"&search={input_text}&=type=exact&limit=10")
     nicknames = response[1]['data']
     print(f"Nicknames returned {nicknames}")
     q.put(nicknames)
@@ -32,13 +68,13 @@ def autocomplete(input_text, event):
 def player_loader(player, event):
     addLog("info", "Started loading player info")
     #Download user info
-    a = apiCaller(wotApiPlayerList, [f"&search={player}&=type=exact&limit=1"])
+    a = apiCaller(wotApiPlayerList, ['nickname', 'account_id'], extra=f"&search={player}&=type=exact&limit=1")
     #Set variable chosen_nickname to user's actual nickaname
     chosen_nickname = a[1]['data'][0]['nickname']
     #Set variable chosen_player_id to user's actual id
     chosen_player_id = a[1]['data'][0]['account_id']
     #Load player data by his player_id
-    player_data = apiCaller(wotApiPlayerInfo, [f"&account_id={chosen_player_id}"])
+    player_data = apiCaller(wotApiPlayerInfo, extra=f"&account_id={chosen_player_id}", fields=['statistics.all','clan_id'])
     #Show it
     print(player_data[1])
     #Set variable player_clan id to actual player's clan id
@@ -59,7 +95,8 @@ def player_loader(player, event):
         player_clan_name = "Not in clan"
         player_clan_tag = "Not in clan"
     #Add all needed variables to queue
-    q.put([chosen_nickname, chosen_player_id, player_clan_name, player_clan_id, player_clan_tag])
+    player_wn8 = WN8(chosen_player_id).calculate()
+    q.put([chosen_nickname, chosen_player_id, player_clan_name, player_clan_id, player_clan_tag, player_wn8])
     #Finish event
     event.set()
 
@@ -115,11 +152,10 @@ q = queue.Queue()
 
 layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
           [sg.Frame(title="Player searching", layout=[
-              [sg.Text("Search for players by their nickname:")],
-              [sg.Input("", k='-input-', size=(45, 1)), sg.Button("Search", k='-button-player-search-')],
-              [sg.Text("Choose player name from this list")],
-              [sg.Listbox(values=[], key='-listbox-', size=(40, 10), expand_x=True, bind_return_key=True,
-                          select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)],
+                        [sg.Text("Search for players by their nickname:"), sg.Input("", k='-input-', size=(45, 1)), sg.Button("Search", k='-button-player-search-')],
+                        [sg.Push(), sg.Text("Double click player name from this list"), sg.Push(), sg.Text("Or choose player name from history"), sg.Push()],
+                        [sg.Listbox(values=[], key='-listbox-', size=(10, 10), expand_x=True, bind_return_key=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE), sg.Listbox(values=[], key='-history-listbox-', size=(10, 10), expand_x=True, bind_return_key=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)
+                        ],
           ], expand_x=True, expand_y=True)
               ,
            sg.Frame(title="Player info", layout=[
@@ -131,59 +167,50 @@ layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
            ], expand_x=True, expand_y=True)
               ,
            sg.Frame(layout=[
-               [sg.Text(text="EU1"), sg.Text(text="-", k='-players-eu1-')],
-               [sg.Text(text="EU2"), sg.Text(text="-", k='-players-eu2-')],
-               [sg.Text(text="EU3"), sg.Text(text="-", k='-players-eu3-')],
-               [sg.Text(text="EU4"), sg.Text(text="-", k='-players-eu4-')],
+               [sg.Text(text="EU1"), sg.Text(text="-----", k='-players-eu1-')],
+               [sg.Text(text="EU2"), sg.Text(text="-----", k='-players-eu2-')],
+               [sg.Text(text="EU3"), sg.Text(text="-----", k='-players-eu3-')],
+               [sg.Text(text="EU4"), sg.Text(text="-----", k='-players-eu4-')],
                [sg.Button('Check', k='-button-serv-chk-')]], title="Servers", expand_x=True, expand_y=True)],
-          [sg.Text("Click \'ENTER\' to run")],
           [sg.TabGroup([
-              [sg.Tab('Player statistics', [
+                [sg.Tab('Player stats', [
                   [sg.Push(),
-                   sg.Column([[sg.Text("Player Rating:")],
+                   sg.Column([[sg.Text("WN8:")],
                               [sg.Text("Battles")],
                               [sg.Text("Victories")],
                               [sg.Text("Lost")],
                               [sg.Text("Draws")],
-                              [sg.Text("Survived")],
                               [sg.Text("Max XP")],
                               [sg.Text("Average XP per battle")],
                               [sg.Text("Max DMG")],
                               [sg.Text("Shots fired")]]),
-                   sg.Column([[sg.Text("-", k='-player-rating-')],
+                   sg.Column([[sg.Text("-", k='-player-wn8-')],
                               [sg.Text("-", k='-battles-')],
                               [sg.Text("-", k='-victories-')],
                               [sg.Text("-", k='-lost-')],
                               [sg.Text("-", k='-draws-')],
-                              [sg.Text("-", k='-survived-')],
                               [sg.Text("-", k='-max-xp-')],
                               [sg.Text("-", k='-avr-xp-battle-')],
                               [sg.Text("-", k='-max-dmg-')],
                               [sg.Text("-", k='-shots-fired-')]]),
-                   sg.Column([[sg.Text("Spotted")],
-                              [sg.Text("Piercings")],
-                              [sg.Text("Frags total")],
-                              [sg.Text("Stuns total")],
-                              [sg.Text("Damage total DEALT")],
-                              [sg.Text("Damage total RECEIVED")],
-                              [sg.Text("Damage total SPOTTED")],
-                              [sg.Text("Max Frags")],
-                              [sg.Text("Shots on target")]]),
-                   sg.Column([[sg.Text("-", k='-spotted-')],
-                              [sg.Text("-", k='-piercings-')],
-                              [sg.Text("-", k='-frags-total-')],
-                              [sg.Text("-", k='-stuns-total-')],
-                              [sg.Text("-", k='-dmg-total-dealt-')],
-                              [sg.Text("-", k='-dmg-total-received-')],
-                              [sg.Text("-", k='dmg-total-spotted-')],
-                              [sg.Text("-", k='-max-frags-')],
-                              [sg.Text("-", k='-shots-hit-')]]),
                    sg.Push(),
                    ]], expand_x=True, expand_y=True),
-               sg.Tab('Clan', [[
+                sg.Tab('Player\'s Clan', [[
 
-               ]], expand_x=True, expand_y=True)]], 
+                ]], expand_x=True, expand_y=True),
+                sg.Tab('Monthly WN8 - Player Charts', [
+                    [sg.Column([
+                        # [sg.Button("Daily", key='-btn-player-daily-'), sg.Button("Weekly", key='-btn-player-weekly-'), sg.Button("Monthly", key='-btn-player-monthly')],
+                        [sg.Graph((1250,650),(0,0),(1250,650), key='Graph1'), sg.Text("Sample chart")]
+                        
+                    ], size=(1550, 500), scrollable=True, vertical_scroll_only=True, key='-column-canvas-1-')]
+                ], expand_x=True, expand_y=True),
+                sg.Tab('Clan Charts', [[
+
+                ]], expand_x=True, expand_y=True),
+                ]],
                 expand_x=True, expand_y=True,)],
+                
           [sg.VPush()],
           [sg.Button('Exit'), sg.Push(),
            sg.Frame(title="Request time", layout=[[sg.Text("Run any request first", k='-ping-api-')]])]]
@@ -193,15 +220,19 @@ layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
 #################################################################################################
 
 
+
 def app():
 
     addLog("info", "App init: app()")
-
     processed = False
     servers_processed = False
     players_processed = False
-    window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layout, size=(1600,900), resizable=False, icon="game.ico")
+    window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layout, size=(1600,1000), resizable=False, icon="game.ico")
 
+    graph1 = window['Graph1']
+    fig1 = plt.figure(1, figsize=(13,6))
+    first = True
+    
     while True:
         event, values = window.read(timeout=100)
         #print(event, values)
@@ -276,6 +307,10 @@ def app():
             player_event.clear()
             player_check.start()
             players_processed = False
+            window['-player-wn8-'].update(value="Calculating...")
+            window['Graph1'].erase()
+            plt.clf()
+            
 
         if not players_processed and player_event.is_set():
             data = q.get()
@@ -283,6 +318,29 @@ def app():
             window['-player-id-after-search-'].update(value=data[1])
             window['-player-clan-'].update(value=data[2])
             window['-player-clan-id-'].update(value=data[3])
+            window['-player-wn8-'].update(value=str(data[5]))
+            dates = []
+            wn8s = []
+
+            a = apiCaller(tomatoSessions, int(data[1]), tomato=True)
+            month_data = a[1]['data']['sesmonth']
+            for month in month_data:
+                a = month['timestamp']
+                wn8 = month['wn8']
+                date = datetime.fromisoformat(a[:-1]).astimezone(timezone.utc)
+                # print(date.strftime('%m-%Y') + f" WN8: {wn8}")
+                dates.append(date.strftime('%m-%Y'))
+                wn8s.append(wn8)
+            # print(len(month_data))
+            plt.ioff()
+            if first:
+                pack_figure(graph1, fig1)
+                first=False
+            
+            plot_figure(1, dates, wn8s, data[0])
+            window['-column-canvas-1-'].contents_changed()
+            
+            # window['-column-canvas-1-'].contents_changed()
             addLog("info", "Check is finished")
             players_processed = True
                     

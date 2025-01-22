@@ -4,6 +4,9 @@ from asset_downloader import apiCaller
 from config_reader import *
 
 class WN8:
+    """
+    This class calculates wn8 of player
+    """
 
     def __init__(self, search):
         self.expected_tank_values = None
@@ -11,6 +14,13 @@ class WN8:
         self.account_id = search
 
     def calculate(self):
+        """This function is required to calculate given player wn8
+        Its automatically called after init of class.
+
+        Returns:
+            int: A integer of player's wn8. Defaults to 0 if no battles found on
+            any tanks on player's account.
+        """
         if self.wn8 is None:
             account_id = self.account_id
             # Get summary values
@@ -33,9 +43,11 @@ class WN8:
             expected_tank_values = da["data"]
             # print(expected_tank_values)
             expDAMAGE = expFRAGS = expSPOT = expDEF = expWIN = 0
+            missing = []
+            found = []
 
-            for tank in tanks:
-                for x in expected_tank_values:
+            for x in expected_tank_values:
+                for tank in tanks:
                     # print(x)
                     if (tank['tank_id'] == x["IDNum"]):
                         tank_battles = tank['statistics']['battles']
@@ -44,7 +56,22 @@ class WN8:
                         expFRAGS    = expFRAGS  + (x['expFrag'] * tank_battles)
                         expDEF      = expDEF    + (x['expDef'] * tank_battles)
                         expWIN      = expWIN    + (0.01 * x['expWinRate'] * tank_battles)
-                # print(expDAMAGE, expSPOT, expFRAGS, expDEF, expWIN)
+                        found.append(x["IDNum"])
+                if x["IDNum"] not in found:
+                    missing.append(x["IDNum"])
+            print(expDAMAGE, expSPOT, expFRAGS, expDEF, expWIN)
+            print(len(found), len(missing))
+            # Is it even worth to do it?
+            # for x in missing:
+            #     sum = apiCaller(wotApiPlayerTanksStats, ['all.battles','all.frags','all.damage_dealt','all.dropped_capture_points','all.spotted','all.wins',f"&tank_id={x}&account_id={account_id}&"])                
+            #     if sum[1]['data'][str(account_id)] is not None:
+            #         summary['damage_dealt'] -= sum[1]['data'][str(account_id)][0]['all']['damage_dealt']
+            #         summary['spotted'] -= sum[1]['data'][str(account_id)][0]['all']['spotted']
+            #         summary['frags'] -= sum[1]['data'][str(account_id)][0]['all']['frags']
+            #         summary['dropped_capture_points'] -= sum[1]['data'][str(account_id)][0]['all']['dropped_capture_points']
+            #         summary['wins'] -= sum[1]['data'][str(account_id)][0]['all']['wins']
+            #         print(expDAMAGE, expSPOT, expFRAGS, expDEF, expWIN)
+
             
             rDAMAGE =   summary['damage_dealt']             / expDAMAGE
             rSPOT =     summary['spotted']                  / expSPOT
@@ -58,8 +85,6 @@ class WN8:
             rDEFc =     max(0, min(rDAMAGEc + 0.1, (rDEF - 0.10) / (1 - 0.10)))
 
             wn8 = (980 * rDAMAGEc + 210 * rDAMAGEc * rFRAGc + 155 * rFRAGc * rSPOTc + 75 * rDEFc * rFRAGc + 145 * min(1.8, rWINc))
-            self.wn8 = round(wn8, 2)
+            self.wn8 = round(wn8, 0)
             print("Current account WN8: "+ str(self.wn8))
-        return self.wn8
-        
-WN8(search="501628953").calculate()
+        return round(self.wn8, 0)

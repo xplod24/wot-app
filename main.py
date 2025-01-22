@@ -1,5 +1,5 @@
 
-import shutil
+import dearpygui.dearpygui as dpg
 import threading
 import requests
 from app import app
@@ -66,11 +66,9 @@ def download_update(url):
         print('Failed to fetch the latest release.')
         return None
 
-
-
 if __name__ == "__main__":
     addLog("info", "App init: main()")
-    
+    sg.theme('DarkGrey3')
     check = check_for_update(repo_url)
 
     # CHECKING FOR UPDATE ON GITHUB REPO
@@ -93,5 +91,6 @@ if __name__ == "__main__":
     #       run_script_end_program()
     #       do_update()
     #       finish_update_run_program()
-
+    # apiCaller(tomatoSessions, int(501628953), tomato=True)
+    
     app()
