@@ -11,3 +11,4 @@ assets/
 /build
 *.ini
 *.txt
+*.json

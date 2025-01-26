@@ -1,24 +1,31 @@
 import PySimpleGUI as sg
-import dearpygui.dearpygui as dpg
 from asset_downloader import apiCaller
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from config_reader import *
 import re
+import os
 from datetime import *
 import threading
 import queue
+import ctypes
 from plyer import notification
 from wn8 import WN8
 from matplotlib import use as use_agg
 from ctypes import windll
 import matplotlib.pyplot as plt
-import PySimpleGUI as sg
 
 #Something important
 windll.shcore.SetProcessDpiAwareness(1)
 sg.theme('DarkGrey3')
 use_agg('TkAgg')
 
+# Get current screen size (where app is launched)
+def screen_size():
+    user32 = ctypes.windll.user32
+    screensizex = user32.GetSystemMetrics(0)/3
+    screensizey = user32.GetSystemMetrics(1)/3
+    return (int(round(screensizex*2, 0)), int(round(screensizey*2, 0)))
+    
 #Pack canvas into render frame
 def pack_figure(graph, figure):
     canvas = FigureCanvasTkAgg(figure, graph.Widget)
@@ -28,12 +35,12 @@ def pack_figure(graph, figure):
 
 #Plot the chart into canvas, using data for x and y axis
 def plot_figure(index, datax, datay, nick, period):
-    fig = plt.figure(index)         # Active an existing figure
-    ax = plt.gca()                  # Get the current axes
+    fig = plt.figure(index)
+    ax = plt.gca()
     x = datax
     y = datay
     ax.cla()
-    ax.set_title(f"WN8 by {period} for player {nick}", pad=20)
+    ax.set_title(f"WN8 per {period} for player {nick}", pad=20)
     ax.set_xlabel(f"{period}")
     ax.tick_params(axis='x', which='major' ,labelrotation=60)
     ax.set_ylabel("WN8")
@@ -55,6 +62,7 @@ def send_notification(title, message):
         timeout=10,
     )
 
+#Write function
 def hitory_write_to_file(filename, target):
     with open(filename, 'w') as file:
         for element in target:
@@ -62,6 +70,7 @@ def hitory_write_to_file(filename, target):
             file.write(f"{element}\n")
     print(f"Elements written to {filename}.")
 
+#Read function
 def history_read_from_file(filename):
     try:
         history_list = []
@@ -242,17 +251,18 @@ layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
 # MAIN APP
 #################################################################################################
 
-
-
 def app():
 
     addLog("info", "App init: app()")
     processed = False
     servers_processed = False
     players_processed = False
+    if not os.path.exists("history.txt"):
+        hitory_write_to_file("history.txt", [])
     read = history_read_from_file("history.txt")
     session_history = read
-    window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layout, size=(1600,1000), resizable=False, icon="game.ico")
+    sizer = screen_size()
+    window = sg.Window('WOT-app Checker app for World Of Tanks @by xplod24', layout, size=(sizer[0],sizer[1]), resizable=False, icon="game.ico")
     addLog("info", "Window created, launching...")
     
     graph1 = window['Graph1']
@@ -279,7 +289,6 @@ def app():
         if len(values['-listbox-']) > 0 and event == '-listbox-':
             xa = values['-listbox-'][0]  # Check for chosen player from listbox
             player_check = threading.Thread(target=player_loader, args=(xa,player_event,))
-
         elif len(values['-history-listbox-']) > 0 and event == '-history-listbox-':
             xa = values['-history-listbox-'][0]
             player_check = threading.Thread(target=player_loader, args=(xa,player_event,))
@@ -364,7 +373,7 @@ def app():
             window['-player-clan-'].update(value=data[2])
             window['-player-clan-id-'].update(value=data[3])
             window['-player-wn8-'].update(value=str(data[5]))
-            if data[0] not in session_history and not None:
+            if str(data[0]) not in session_history and not None:
                 session_history.append(data[0])
                 hitory_write_to_file("history.txt", session_history)
             window['-history-listbox-'].update(values=session_history)

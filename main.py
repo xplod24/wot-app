@@ -1,6 +1,3 @@
-
-import dearpygui.dearpygui as dpg
-import threading
 import requests
 from app import app
 from asset_downloader import apiCaller

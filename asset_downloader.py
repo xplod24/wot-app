@@ -6,20 +6,22 @@ import PySimpleGUI as sg
 from config_reader import *
 
 # BASE API CALLER AND BUILDER
-def apiCaller(whatApiToCall, fields=None, extra="", tomato=False):
+def apiCaller(whatApiToCall, fields=None, extra="", tomato=False, wg=False, hemero=False):
     """API caller and builder to connect to WG API or tomato.gg API
 
     Args:
         whatApiToCall (variable): Use correct variable from config _reader
         fields (List[string]) or (int): List of strings of field elements to get response of. CARE: if totmato is True, then it takes only int
+        extra (string): A variable to add just after whatApiToCall
         tomato (boolean): Call to tomato.gg API (currently only player sessions)
+        hemero (boolean): Call to hemero.ru site (Get event info, site is working currently stable)
 
     Returns:
         (apiToCall, jsonParse, callTime): returns url called, then parsed json and call time (in ms)
     """
     addLog("info","apiCaller used")
     try:
-        if not tomato:
+        if wg and not tomato and not hemero:
         # Builder portion - this is based on .ini file and configuration. This should be robust, as it require single config file
             apiToCall = main_api_url + whatApiToCall + app_id + extra
             # Fields, can contain other calls, should be renamed into something more informative
@@ -46,7 +48,7 @@ def apiCaller(whatApiToCall, fields=None, extra="", tomato=False):
             data = responseApi.text
             json_parse = json.loads(data)
             show_parse = json.dumps(json_parse, indent=1)
-        elif tomato is True:
+        elif tomato and not wg and not hemero:
             apiToCall = whatApiToCall
             if isinstance(fields, int):
                 apiToCall = apiToCall + f"{fields}"
