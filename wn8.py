@@ -24,13 +24,13 @@ class WN8:
         if self.wn8 is None:
             account_id = self.account_id
             # Get summary values
-            sum = apiCaller(wotApiPlayerInfo, ['statistics.all.battles' ,'statistics.all.frags','statistics.all.damage_dealt','statistics.all.dropped_capture_points','statistics.all.spotted','statistics.all.wins',f"&account_id={account_id}"])
+            sum = apiCaller(wotApiPlayerInfo, ['statistics.all.battles' ,'statistics.all.frags','statistics.all.damage_dealt','statistics.all.dropped_capture_points','statistics.all.spotted','statistics.all.wins',f"&account_id={account_id}"], wg=True)
             # print(sum.text)
             data = sum[1]
             summary = data["data"][str(account_id)]["statistics"]['all']
             # print(summary)
             # Get tanks values
-            tan = apiCaller(wotApiPlayerTanksData, ['tank_id,statistics.battles',f"&account_id={account_id}"])
+            tan = apiCaller(wotApiPlayerTanksData, ['tank_id,statistics.battles',f"&account_id={account_id}"], wg=True)
             dat = tan[1]
             tanks = dat["data"][str(account_id)]
             #print(tanks)

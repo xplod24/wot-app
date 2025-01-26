@@ -10,8 +10,6 @@ current_version_tag = "0.0.1"
 
 ##############################################################################################################################
 
-# TODO: Add update file extraction and update process
-# -----
 # TODO: Make a settings.py and allow user to manage settings of an app <- !!IMPORTANT!!
 # -----
 # TODO: Add functionality to allow user to change rate of downloading refreshed data (min 10 min, max 1 hour)
@@ -21,7 +19,6 @@ current_version_tag = "0.0.1"
 # PLAN FOR APP
 # TODO: Add collection of data to a .csv file - this will be basically a database for single user we want to track data for.
 # TODO: Filename should be: 'user-userid' for easier and faster searching
-# TODO: Add ability to create charts shown in app in first tab
 # TODO: Add ability to track data for single user
 
 ##############################################################################################################################

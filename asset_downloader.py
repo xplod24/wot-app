@@ -21,6 +21,7 @@ def apiCaller(whatApiToCall, fields=None, extra="", tomato=False, wg=False, heme
     """
     addLog("info","apiCaller used")
     try:
+        # WARGAMING API
         if wg and not tomato and not hemero:
         # Builder portion - this is based on .ini file and configuration. This should be robust, as it require single config file
             apiToCall = main_api_url + whatApiToCall + app_id + extra
@@ -48,6 +49,7 @@ def apiCaller(whatApiToCall, fields=None, extra="", tomato=False, wg=False, heme
             data = responseApi.text
             json_parse = json.loads(data)
             show_parse = json.dumps(json_parse, indent=1)
+        # TOMATO.GG API
         elif tomato and not wg and not hemero:
             apiToCall = whatApiToCall
             if isinstance(fields, int):
@@ -66,12 +68,15 @@ def apiCaller(whatApiToCall, fields=None, extra="", tomato=False, wg=False, heme
             data = responseApi.text
             json_parse = json.loads(data)
             show_parse = json.dumps(json_parse, indent=1)
+        # HEMERO
+        elif hemero and not wg and not tomato:
+            pass
     except Exception as error:
         addLog("critical", f"Fatal error: {error}")
         print(f"Error: {error}")
         sg.Popup(f"Fatal error: {error}")
         exit(1)
     print(f"Function called this url: {apiToCall}")
-    print(f"And received:\n {show_parse}")
+    # print(f"And received:\n {show_parse}")
     print(f"Response time was:  {callTime} ms")
     return apiToCall, json_parse, round(callTime, 2), code

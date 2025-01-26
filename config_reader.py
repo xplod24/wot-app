@@ -7,15 +7,18 @@ from log import addLog
 ## CONFING FALLBACK DEFAULTS ##
 default_config = """
 [Connection]
-main_api_uri = https://api.worldoftanks.eu
-app_id = 9ec1b1d893318612477ebc6807902c3c
+main_api_wg = https://api.worldoftanks.eu
+app_id_wg = ?application_id=9ec1b1d893318612477ebc6807902c3c
+main_api_tomato = https://api.tomato.gg/dev/api-v2
+
+[RequestAPI-Tomato]
+player-sessions = /player/sessions/eu/
+player-recents = /player/recents/eu/
+
+[RequestAPI-Hemero]
 
 [RequestAPI-WG]
 servers = /wgn/servers/info/
-player = /wgn/account/list/
-
-[Tomato-gg]
-player-sessions = https://api.tomato.gg/dev/api-v2/player/sessions/eu/
 
 [RequestAPI-WOT]
 player-list = /wot/account/list/
@@ -75,13 +78,11 @@ try:
             value = configuration.get(section, option)
             print(f"{option} - {value}")
             
-    main_api_url = configuration.get("Connection", "main_api_uri")
-    app_id = configuration.get("Connection", "app_id")
-    app_id = f"?application_id="+str(app_id)
-    print(app_id)
+    main_api_url = configuration.get("Connection", "main_api_wg")
+    app_id = configuration.get("Connection", "app_id_wg")
+    main_api_tomato = configuration.get("Connection", "main_api_tomato")
     
     wgApiServers = configuration.get("RequestAPI-WG", "servers")
-    wgPlayerInfo = configuration.get("RequestAPI-WG", "player")
     
     wotApiAssetsTanks = configuration.get("RequestAPI-WOT", "tankopedia-tanks-list")
     wotApiAssetsModules = configuration.get("RequestAPI-WOT", "tankopedia-consum-modules")
@@ -97,7 +98,7 @@ try:
     wotApiClanData = configuration.get("RequestAPI-WOT", "clans-data")
     wotApiClanMembers = configuration.get("RequestAPI-WOT", "clans-members")
     
-    tomatoSessions = configuration.get("Tomato-gg", "player-sessions")
+    tomatoSessions = configuration.get("RequestAPI-Tomato", "player-sessions")
 
 except Exception as e:
     print(f"Error occured: {e}")

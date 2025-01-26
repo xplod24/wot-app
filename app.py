@@ -86,7 +86,7 @@ def history_read_from_file(filename):
 def autocomplete(input_text, event):
     if len(input_text) < 3 or not re.match(r'^[\w_]', input_text):
         return []
-    response = apiCaller(wotApiPlayerList, extra=f"&search={input_text}&=type=exact&limit=10")
+    response = apiCaller(wotApiPlayerList, extra=f"&search={input_text}&=type=exact&limit=10", wg=True)
     nicknames = response[1]['data']
     print(f"Nicknames returned {nicknames}")
     q.put(nicknames)
@@ -97,13 +97,13 @@ def autocomplete(input_text, event):
 def player_loader(player, event):
     addLog("info", "Started loading player info")
     #Download user info
-    a = apiCaller(wotApiPlayerList, ['nickname', 'account_id'], extra=f"&search={player}&=type=exact&limit=1")
+    a = apiCaller(wotApiPlayerList, ['nickname', 'account_id'], extra=f"&search={player}&=type=exact&limit=1", wg=True)
     #Set variable chosen_nickname to user's actual nickaname
     chosen_nickname = a[1]['data'][0]['nickname']
     #Set variable chosen_player_id to user's actual id
     chosen_player_id = a[1]['data'][0]['account_id']
     #Load player data by his player_id
-    player_data = apiCaller(wotApiPlayerInfo, extra=f"&account_id={chosen_player_id}", fields=['statistics.all','clan_id'])
+    player_data = apiCaller(wotApiPlayerInfo, extra=f"&account_id={chosen_player_id}", fields=['statistics.all','clan_id'], wg=True)
     #Show it
     print(player_data[1])
     #Set variable player_clan id to actual player's clan id
@@ -113,7 +113,7 @@ def player_loader(player, event):
     if player_clan_id is not None:
         addLog("info", "Player is in clan!")
         #Load user's clan data
-        clan_data = apiCaller(wotApiClanData, ["name", "tag",f"&clan_id={player_clan_id}"])
+        clan_data = apiCaller(wotApiClanData, ["name", "tag",f"&clan_id={player_clan_id}"], wg=True)
         #Set variable of clan's name
         player_clan_name = clan_data[1]['data'][str(player_clan_id)]['name']
         #Set variable of clan's id
@@ -132,7 +132,7 @@ def player_loader(player, event):
 # Server status checking (one time or periodical)
 def server_checker(event):
     #Call api to get servers status
-    a = apiCaller(wgApiServers, ["server", "players_online&game=wot"])
+    a = apiCaller(wgApiServers, ["server", "players_online&game=wot"], wg=True)
     #Check if servers are available over the api and populate info correctly
     if len(a[1]['data']['wot']) > 0:
         for i in a[1]['data']['wot']:
@@ -181,21 +181,20 @@ session_history = []
 #################################################################################################
 
 
-layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
-          [sg.Frame(title="Player searching", layout=[
+layout = [[sg.Frame(title="Player searching", layout=[
                         [sg.Text("Search for players by their nickname:"), sg.Input("", k='-input-', size=(45, 1)), sg.Button("Search", k='-button-player-search-')],
                         [sg.Push(), sg.Text("Double click player name from this list"), sg.Push(), sg.Text("Or choose player name from history"), sg.Push()],
-                        [sg.Listbox(values=[], key='-listbox-', size=(10, 10), expand_x=True, bind_return_key=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE), 
-                         sg.Listbox(values=session_history, key='-history-listbox-', size=(10, 10), expand_x=True, bind_return_key=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)
+                        [sg.Listbox(values=[], key='-listbox-', size=(10, 10), expand_x=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE), 
+                         sg.Listbox(values=session_history, key='-history-listbox-', size=(10, 10), expand_x=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)
                         ],
+                        [sg.Push(),sg.Button("Search", key='-button-search-'),sg.Push(),sg.Button("Search", key='-button-search-history-'),sg.Push()]
           ], expand_x=True, expand_y=True)
               ,
            sg.Frame(title="Player info", layout=[
-               [[sg.HSep()],
                 [sg.Text("Player Name:"), sg.Push(), sg.Text("-", k='-player-name-after-search-')],
-                [sg.Text("Player ID:"), sg.Push(), sg.Text("-", k='-player-id-after-search-')], ],
-               [sg.Text("Player Clan:"), sg.Push(), sg.Text("-", k='-player-clan-')],
-               [sg.Text("Player Clan ID:"), sg.Push(), sg.Text("-", k='-player-clan-id-')]
+                [sg.Text("Player ID:"), sg.Push(), sg.Text("-", k='-player-id-after-search-')],
+                [sg.Text("Player Clan:"), sg.Push(), sg.Text("-", k='-player-clan-')],
+                [sg.Text("Player Clan ID:"), sg.Push(), sg.Text("-", k='-player-clan-id-')]
            ], expand_x=True, expand_y=True)
               ,
            sg.Frame(layout=[
@@ -242,8 +241,6 @@ layout = [[sg.Push(), sg.Text('Wot-app checker'), sg.Push()],
                 ]], expand_x=True, expand_y=True),
                 ]],
                 expand_x=True, expand_y=True,)],
-                
-          [sg.VPush()],
           [sg.Button('Exit'), sg.Push(),
            sg.Frame(title="Request time", layout=[[sg.Text("Run any request first", k='-ping-api-')]])]]
 
@@ -274,31 +271,24 @@ def app():
         event, values = window.read(timeout=100)
         # print(event, values)
         # addLog("info",f"{event}, {values}")
-            
+        
+        # Check input values and define data_loader thread        
+        input_text = values['-input-']    
+        data_loader = threading.Thread(target=autocomplete, args=(input_text,eventer,))
+        server_check = threading.Thread(target=server_checker, args=(eventer2,))    
+        
         if event == sg.WIN_CLOSED or event == 'Exit':
             addLog("info", "Main window closed correctly.")
             addLog("info", "App closed: app()")
+            exit(0)
             break
         
         if not init_history:
             window['-history-listbox-'].update(values=session_history)
             init_history = True
-        
-        # Check input values and define data_loader thread
-        input_text = values['-input-']
-        if len(values['-listbox-']) > 0 and event == '-listbox-':
-            xa = values['-listbox-'][0]  # Check for chosen player from listbox
-            player_check = threading.Thread(target=player_loader, args=(xa,player_event,))
-        elif len(values['-history-listbox-']) > 0 and event == '-history-listbox-':
-            xa = values['-history-listbox-'][0]
-            player_check = threading.Thread(target=player_loader, args=(xa,player_event,))
-        else:
-            xa = None
-        
-        data_loader = threading.Thread(target=autocomplete, args=(input_text,eventer,))
-        server_check = threading.Thread(target=server_checker, args=(eventer2,))
-        
 
+
+        # print(xa)
         # Search button clicked
         if event == '-button-player-search-':
             addLog("info", "Searching players...")
@@ -313,7 +303,7 @@ def app():
                 addLog("info", "Started searching for players, search button disabled")
                 
         # If thread is still alive and not processed yet
-        if  not processed and eventer.is_set():
+        if not processed and eventer.is_set():
             suggestions = q.get()#Get results from queue
             window['-ping-api-'].update(value=str(q.get())+" ms")
             nickname_list = []      
@@ -345,10 +335,27 @@ def app():
             window['-button-serv-chk-'].update(text="Check", disabled=False)
             addLog("info", "Finished server checking and pinging...")
             servers_processed = True                              # Mark this task as processed
-
-        # Updating listbox element when searching for player
-        if event == '-listbox-':
+        
+        if event == '-button-search-':
+            window['-button-search-'].update(disabled=True)
+            window['-button-search-history-'].update(disabled=True)
+            xa = values['-listbox-'][0]  # Check for chosen player from listbox
+            player_check = threading.Thread(target=player_loader, args=(xa,player_event,))
             addLog("info", "Started check for selected player from list...")
+            player_event.clear()
+            player_check.start()
+            players_processed = False
+            window['-player-wn8-'].update(value="Calculating...")
+            window['Graph1'].erase()
+            plt.clf()
+
+                
+        if event == '-button-search-history-':
+            window['-button-search-'].update(disabled=True)
+            window['-button-search-history-'].update(disabled=True)
+            xa = values['-history-listbox-'][0] # Check for chosen player from listbox
+            player_check = threading.Thread(target=player_loader, args=(xa,player_event,))
+            addLog("info", "Started check for selected player from history...")
             player_event.clear()
             player_check.start()
             players_processed = False
@@ -356,15 +363,6 @@ def app():
             window['Graph1'].erase()
             plt.clf()
             
-        if event == '-history-listbox-':
-            addLog("info", "Started check for selected player from list...")
-            player_event.clear()
-            player_check.start()
-            players_processed = False
-            window['-player-wn8-'].update(value="Calculating...")
-            window['Graph1'].erase()
-            plt.clf()
-
         if not players_processed and player_event.is_set():
             # Read data from queue
             data = q.get()
@@ -380,7 +378,7 @@ def app():
             dates = []
             wn8s = []
 
-            a = apiCaller(tomatoSessions, int(data[1]), tomato=True)
+            a = apiCaller(main_api_tomato+tomatoSessions, int(data[1]), tomato=True)
             month_data = a[1]['data']['sesmonth']
             for month in month_data:
                 a = month['timestamp']
@@ -391,14 +389,15 @@ def app():
                 wn8s.append(wn8)
             # print(len(month_data))
             plt.ioff()
+            #This is funny hahaha
             if first:
                 pack_figure(graph1, fig1)
                 first=False
             
             plot_figure(1, dates, wn8s, data[0], "month")
             window['-column-canvas-1-'].contents_changed()
-            
-            # window['-column-canvas-1-'].contents_changed()
+            window['-button-search-'].update(disabled=False)
+            window['-button-search-history-'].update(disabled=False)
             addLog("info", "Check is finished")
             players_processed = True
                     
