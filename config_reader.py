@@ -14,6 +14,8 @@ main_api_tomato = https://api.tomato.gg/dev/api-v2
 [RequestAPI-Tomato]
 player-sessions = /player/sessions/eu/
 player-recents = /player/recents/eu/
+player-clan-history = /player/clan-history-unofficial/EU/
+player-overall-tracker = /player/overall-tracker/eu/
 
 [RequestAPI-Hemero]
 

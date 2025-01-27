@@ -80,11 +80,6 @@ if __name__ == "__main__":
         else:
             sg.popup("Invalid input!")
         pass
-
-    # BELOW IS JUST A PROPOSED PROCESS OF UPDATING THE APP
-    #       run_script_end_program()
-    #       do_update()
-    #       finish_update_run_program()
     # apiCaller(tomatoSessions, int(501628953), tomato=True)
-    
+    sg.popup("Don't close terminal. This will terminate app as well.")
     app()

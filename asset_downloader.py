@@ -75,7 +75,6 @@ def apiCaller(whatApiToCall, fields=None, extra="", tomato=False, wg=False, heme
         addLog("critical", f"Fatal error: {error}")
         print(f"Error: {error}")
         sg.Popup(f"Fatal error: {error}")
-        exit(1)
     print(f"Function called this url: {apiToCall}")
     # print(f"And received:\n {show_parse}")
     print(f"Response time was:  {callTime} ms")

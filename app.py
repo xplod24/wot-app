@@ -179,15 +179,24 @@ session_history = []
 #################################################################################################
 # MAIN APP LAYOUT
 #################################################################################################
+listbox1 = [
+    [sg.Text("Search player name from this list"),],
+    [sg.Listbox(values=[], key='-listbox-', size=(10, 10), expand_x=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)], 
+    [sg.Button("Search", key='-button-search-')]
+]
 
+listbox2 = [
+    [sg.Text("Or choose player name from history"),],
+    [sg.Listbox(values=session_history, key='-history-listbox-', size=(10, 10), expand_x=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)], 
+    [sg.Button("Search", key='-button-search-history-')]
+]
 
 layout = [[sg.Frame(title="Player searching", layout=[
                         [sg.Text("Search for players by their nickname:"), sg.Input("", k='-input-', size=(45, 1)), sg.Button("Search", k='-button-player-search-')],
-                        [sg.Push(), sg.Text("Double click player name from this list"), sg.Push(), sg.Text("Or choose player name from history"), sg.Push()],
-                        [sg.Listbox(values=[], key='-listbox-', size=(10, 10), expand_x=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE), 
-                         sg.Listbox(values=session_history, key='-history-listbox-', size=(10, 10), expand_x=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)
-                        ],
-                        [sg.Push(),sg.Button("Search", key='-button-search-'),sg.Push(),sg.Button("Search", key='-button-search-history-'),sg.Push()]
+                        [sg.Column(listbox1        
+                            ,expand_x=True, element_justification="center"),
+                        sg.Column(listbox2  
+                            ,expand_x=True, element_justification="center")],
           ], expand_x=True, expand_y=True)
               ,
            sg.Frame(title="Player info", layout=[
@@ -272,10 +281,7 @@ def app():
         # print(event, values)
         # addLog("info",f"{event}, {values}")
         
-        # Check input values and define data_loader thread        
-        input_text = values['-input-']    
-        data_loader = threading.Thread(target=autocomplete, args=(input_text,eventer,))
-        server_check = threading.Thread(target=server_checker, args=(eventer2,))    
+       
         
         if event == sg.WIN_CLOSED or event == 'Exit':
             addLog("info", "Main window closed correctly.")
@@ -287,14 +293,18 @@ def app():
             window['-history-listbox-'].update(values=session_history)
             init_history = True
 
-
+        # Check input values and define data_loader thread
+        if type(values["-input-"]) is not None:
+            input_text = values['-input-']    
+        data_loader = threading.Thread(target=autocomplete, args=(input_text,eventer,))
+        server_check = threading.Thread(target=server_checker, args=(eventer2,))
         # print(xa)
         # Search button clicked
         if event == '-button-player-search-':
             addLog("info", "Searching players...")
             if len(input_text) <= 3:
                 sg.popup("Nickname has to contain at least 4 or more characters.")
-                addLog("warning", "POPUP WINDOW: Nickname too short...")
+                addLog("warning", "POPUP WINDOW: Nickname too short")
             else:
                 eventer.clear()     #Clear events
                 processed = False   #Disable processed flag
