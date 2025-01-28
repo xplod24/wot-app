@@ -9,6 +9,8 @@ assets/
 /.github
 /dist
 /build
+/.idea
+.idea/
 *.ini
 *.txt
 *.json

@@ -280,9 +280,7 @@ def app():
         event, values = window.read(timeout=100)
         # print(event, values)
         # addLog("info",f"{event}, {values}")
-        
-       
-        
+
         if event == sg.WIN_CLOSED or event == 'Exit':
             addLog("info", "Main window closed correctly.")
             addLog("info", "App closed: app()")
