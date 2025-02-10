@@ -11,14 +11,13 @@ current_version_tag = "0.0.1"
 ##############################################################################################################################
 
 # TODO: Make a settings.py and allow user to manage settings of an app <- !!IMPORTANT!!
-# -----
 # TODO: Add functionality to allow user to change rate of downloading refreshed data (min 10 min, max 1 hour)
 # TODO: Add ability for user to write player names to get stats of, and do it every set amount of time (minimum 10 min)
 # TODO: Add background checking for internet connection <- !!IMPORTANT!!
 
 # PLAN FOR APP
 # TODO: Add collection of data to a .csv file - this will be basically a database for single user we want to track data for.
-# TODO: Filename should be: 'user-userid' for easier and faster searching
+# TODO: Filename should be: 'user-user_id' for easier and faster searching
 # TODO: Add ability to track data for single user
 
 ##############################################################################################################################
@@ -80,6 +79,4 @@ if __name__ == "__main__":
         else:
             sg.popup("Invalid input!")
         pass
-    # apiCaller(tomatoSessions, int(501628953), tomato=True)
-    sg.popup("Don't close terminal. This will terminate app as well.")
     app()

@@ -191,30 +191,53 @@ listbox2 = [
     [sg.Button("Search", key='-button-search-history-')]
 ]
 
-layout = [[sg.Frame(title="Player searching", layout=[
-                        [sg.Text("Search for players by their nickname:"), sg.Input("", k='-input-', size=(45, 1)), sg.Button("Search", k='-button-player-search-')],
-                        [sg.Column(listbox1        
-                            ,expand_x=True, element_justification="center"),
-                        sg.Column(listbox2  
-                            ,expand_x=True, element_justification="center")],
-          ], expand_x=True, expand_y=True)
-              ,
-           sg.Frame(title="Player info", layout=[
-                [sg.Text("Player Name:"), sg.Push(), sg.Text("-", k='-player-name-after-search-')],
-                [sg.Text("Player ID:"), sg.Push(), sg.Text("-", k='-player-id-after-search-')],
-                [sg.Text("Player Clan:"), sg.Push(), sg.Text("-", k='-player-clan-')],
-                [sg.Text("Player Clan ID:"), sg.Push(), sg.Text("-", k='-player-clan-id-')]
-           ], expand_x=True, expand_y=True)
-              ,
-           sg.Frame(layout=[
+listbox3 = [
+    [sg.Text("Choose player nickaname too add to search"),],
+    [sg.Listbox(values=[], key='-listbox-', size=(10, 10), expand_x=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)], 
+    [sg.Button("Add to list", key='-button-add-search-')]
+]
+
+listboxmultiple = [
+    [sg.Text("Search will be conducted on these players:"),],
+    [sg.Listbox(values=session_history, key='-multiple-search-listbox-', size=(10, 10), expand_x=True, select_mode=sg.LISTBOX_SELECT_MODE_SINGLE)], 
+    [sg.Button("Search all", key='-button-search-multiple-'), sg.Button("Remove", key='-remove-chosen-from-list-'), sg.Button("Remove all", key='-remove-whole-list-')]
+]
+
+layout = [[
+            sg.Frame(layout=[
                [sg.Text(text="EU1"), sg.Text(text="-----", k='-players-eu1-')],
                [sg.Text(text="EU2"), sg.Text(text="-----", k='-players-eu2-')],
                [sg.Text(text="EU3"), sg.Text(text="-----", k='-players-eu3-')],
                [sg.Text(text="EU4"), sg.Text(text="-----", k='-players-eu4-')],
-               [sg.Button('Check', k='-button-serv-chk-')]], title="Servers", expand_x=True, expand_y=True)],
+               [sg.Button('Check', k='-button-serv-chk-')]], title="Servers", expand_x=True, expand_y=True, key='-frame-server-check-'),
+            
+            sg.Frame(title="Single player searching", layout=[
+                        [sg.Text("Search for players by their nickname:"), sg.Input("", k='-input-', size=(45, 1)), sg.Button("Search", k='-button-player-search-')],
+                        [sg.Column(listbox1,expand_x=True, element_justification="center"),
+                        sg.Column(listbox2,expand_x=True, element_justification="center")],
+                        [sg.Button("Switch to multiple search mode", key='-button-switch-to-multiple-')],
+            ], expand_x=True, expand_y=True, key='-frame-player-search-single-', visible=True)
+              ,
+            sg.Frame(title="Multiple player searching", layout=[
+                        [sg.Text("Search for players by their nickname:"), sg.Input("", k='-input-', size=(45, 1)), sg.Button("Search", k='-button-player-search-')],
+                        [sg.Column(listbox3,expand_x=True, element_justification="center"),
+                         sg.Column(listboxmultiple,expand_x=True, element_justification="center")],
+                        [sg.Button("Switch to single search mode", key='-button-switch-to-single-')],
+            ], expand_x=True, expand_y=True, key='-frame-player-search-multiple-', visible=False),
+           ],
           [sg.TabGroup([
                 [sg.Tab('Player stats', [
                   [sg.Push(),
+                   sg.Column([[sg.Text("Player Name:")],
+                              [sg.Text("Player ID:")],
+                              [sg.Text("Player Clan:")],
+                              [sg.Text("Player Clan ID:")],
+                       ]),
+                   sg.Column([[sg.Text("-", k='-player-name-after-search-')],
+                              [sg.Text("-", k='-player-id-after-search-')],
+                              [sg.Text("-", k='-player-clan-')],
+                              [sg.Text("-", k='-player-clan-id-')],
+                       ]),
                    sg.Column([[sg.Text("WN8:")],
                               [sg.Text("Battles")],
                               [sg.Text("Victories")],
@@ -250,7 +273,7 @@ layout = [[sg.Frame(title="Player searching", layout=[
                 ]], expand_x=True, expand_y=True),
                 ]],
                 expand_x=True, expand_y=True,)],
-          [sg.Button('Exit'), sg.Push(),
+          [sg.Frame(title="Notification log", layout=[[sg.Multiline(size=(30,3), expand_x=True, reroute_stdout=True, write_only=True, disabled=True, autoscroll=True)]], expand_x=True),
            sg.Frame(title="Request time", layout=[[sg.Text("Run any request first", k='-ping-api-')]])]]
 
 #################################################################################################
@@ -357,6 +380,13 @@ def app():
             window['Graph1'].erase()
             plt.clf()
 
+        if event == '-button-switch-to-multiple-':
+            window['-frame-player-search-single-'].update(visible=False)
+            window['-frame-player-search-multiple-'].update(visible=True)
+            
+        if event == '-button-switch-to-single-':
+            window['-frame-player-search-single-'].update(visible=True)
+            window['-frame-player-search-multiple-'].update(visible=False)
                 
         if event == '-button-search-history-':
             window['-button-search-'].update(disabled=True)

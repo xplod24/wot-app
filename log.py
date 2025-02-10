@@ -30,20 +30,20 @@ def addLog(logLevel, message):
     """
     if logLevel == "info":
         logger.info(message)
-        print(f"{Colors.OK_GREEN}{message}{Colors.END_C}")
+        print(f"{message}")
     elif logLevel == "debug":
         logger.debug(message)
-        print(f"{Colors.OK_CYAN}{message}{Colors.END_C}")
+        print(f"{message}")
     elif logLevel == "warning":
         logger.warning(message)
-        print(f"{Colors.WARNING}{message}{Colors.END_C}")
+        print(f"{message}")
     elif logLevel == "error":
         logger.error(message)
-        print(f"{Colors.WARNING}{message}{Colors.END_C}")
+        print(f"{message}")
     elif logLevel == "critical":
         logger.critical(message)
-        print(f"{Colors.FAIL}{message}{Colors.END_C}")
+        print(f"{message}")
     else:
         logger.critical(f"Unknown level {logLevel}")
-        print(f"{Colors.FAIL}{logLevel} - Unknown level {Colors.END_C}")
+        print(f"{logLevel} - Unknown level")
         raise Exception(f"Unknown level {logLevel}")

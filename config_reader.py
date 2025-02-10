@@ -10,6 +10,10 @@ default_config = """
 main_api_wg = https://api.worldoftanks.eu
 app_id_wg = ?application_id=9ec1b1d893318612477ebc6807902c3c
 main_api_tomato = https://api.tomato.gg/dev/api-v2
+wot_eu1_server = https://login.p1.worldoftanks.eu
+wot_eu2_server = https://login.p2.worldoftanks.eu
+wot_eu3_server = https://login.p3.worldoftanks.eu
+wot_eu4_server = https://login.p4.worldoftanks.eu
 
 [RequestAPI-Tomato]
 player-sessions = /player/sessions/eu/
@@ -79,6 +83,11 @@ try:
         for option in options:
             value = configuration.get(section, option)
             print(f"{option} - {value}")
+            
+    wot_eu1 = configuration.get("Connection", "wot_eu1_server")
+    wot_eu2 = configuration.get("Connection", "wot_eu2_server")
+    wot_eu3 = configuration.get("Connection", "wot_eu3_server")
+    wot_eu4 = configuration.get("Connection", "wot_eu4_server")
             
     main_api_url = configuration.get("Connection", "main_api_wg")
     app_id = configuration.get("Connection", "app_id_wg")
